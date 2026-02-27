@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>限時隨機測驗系統 (進階雲端版)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
+        .admin-container { max-width: 800px; overflow-x: auto; }
+        input[type="text"], input[type="password"] { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; margin: 10px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; }
+        .option-btn { display: block; width: 100%; margin: 10px 0; background-color: #e9ecef; color: #333; text-align: left; }
+        .option-btn:hover { background-color: #d3d9df; }
+        #timer { font-size: 20px; font-weight: bold; color: #dc3545; margin-bottom: 20px; }
+        .hidden { display: none; }
+        .question-text { font-size: 18px; margin-bottom: 20px; font-weight: bold; }
+        .score-info { font-size: 14px; color: #666; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 650px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        ol.leaderboard-list { text-align: left; font-size: 18px; display: inline-block; padding-left: 20px; }
+        ol.leaderboard-list li { margin: 15px 0; font-weight: bold; }
+    </style>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<div class="container" id="login-screen">
+    <h2>🔐 系統登入</h2>
+    <input type="text" id="username" placeholder="請輸入帳號 (Sapling/Devotion/manager101)"><br>
+    <input type="password" id="password" placeholder="請輸入密碼"><br>
+    <button onclick="login()">登入</button>
+</div>
+
+<div class="container hidden" id="menu-screen">
+    <h2>📱 主選單</h2>
+    <p>Cell: <span id="display-cell" style="font-weight:bold; color:#007bff;"></span></p>
+    <button onclick="showNameScreen()">▶️ 開始測驗</button>
+    <button onclick="showLeaderboard()">🏆 查看成績 (Top 5)</button>
+    <br><br>
+    <button class="btn-danger" onclick="logout()">登出</button>
+</div>
+
+<div class="container hidden" id="leaderboard-screen">
+    <h2>🏆 最高分 Top 5 排行榜</h2>
+    <hr>
+    <ol id="top5-list" class="leaderboard-list">
+        </ol>
+    <br>
+    <button class="btn-secondary" onclick="goBackToMenu()">🔙 返回主選單</button>
+</div>
+
+<div class="container hidden" id="name-screen">
+    <h2>📝 準備開始</h2>
+    <p>請輸入你的真實姓名 (每個姓名只可作答一次)：</p>
+    <input type="text" id="user-real-name" placeholder="例如：陳大文"><br>
+    <button id="submit-name-btn" onclick="submitName()">驗證並下一步</button>
+    <button class="btn-secondary" onclick="goBackToMenu()">返回</button>
+</div>
+
+<div class="container hidden" id="personal-score-screen">
+    <h2>⚠️ 你已經完成過測驗！</h2>
+    <p>系統紀錄顯示你已經作答過，以下係你當時嘅成績：</p>
+    <h1 id="personal-score-display" style="color: #007bff;"></h1>
+    <button class="btn-secondary" onclick="goBackToMenu()">🔙 返回主選單</button>
+</div>
+
+<div class="container hidden" id="setup-screen">
+    <h2>📝 選擇難度</h2>
+    <p><span id="display-name" style="font-weight:bold;"></span>，請選擇：</p>
+    <button onclick="startQuiz(10, 10, 100, '低難度')">🟢 低難度 (10分鐘)</button>
+    <button onclick="startQuiz(5, 12.5, 125, '中難度')">🟡 中難度 (5分鐘)</button>
+    <button onclick="startQuiz(2, 15, 150, '高難度')">🔴 高難度 (2分鐘)</button>
+</div>
+
+<div class="container hidden" id="quiz-screen">
+    <div id="timer">剩餘時間: <span id="time-left">00:00</span></div>
+    <div id="progress">第 <span id="current-q-num">1</span> / 10 題</div>
+    <div class="score-info" id="score-info">每題 0 分</div>
+    <hr>
+    <div class="question-text" id="question-text">題目載入中...</div>
+    <div id="options-container"></div>
+</div>
+
+<div class="container hidden" id="result-screen">
+    <h2>🎉 測驗結束！</h2>
+    <p>成績已安全上傳至雲端</p>
+    <p>你的得分是：</p>
+    <h1 id="score-display">0 / 0</h1>
+    <button onclick="logout()">返回首頁</button>
+</div>
+
+<div class="container admin-container hidden" id="admin-screen">
+    <h2>📊 雲端測驗成績後台</h2>
+    <button onclick="logout()">登出</button>
+    <button class="btn-danger" onclick="clearRecords()">🗑️ 清除所有記錄</button>
+    <p id="loading-text" style="color: #007bff; font-weight: bold;"></p>
+    <table>
+        <thead>
+            <tr>
+                <th>完成日期及時間</th>
+                <th>Cell 帳號</th>
+                <th>姓名</th>
+                <th>難度</th>
+                <th>分數</th>
+            </tr>
+        </thead>
+        <tbody id="admin-table-body"></tbody>
+    </table>
+</div>
+
+<script>
+    // ✅ 已加入你的專屬 Firebase 配置
+    const firebaseConfig = {
+        apiKey: "AIzaSyCud2BDeVczN5h_bi9SVF6Bi0A1DX3gPfU",
+        authDomain: "peterbiblereading2026.firebaseapp.com",
+        projectId: "peterbiblereading2026",
+        storageBucket: "peterbiblereading2026.firebasestorage.app",
+        messagingSenderId: "543051702211",
+        appId: "1:543051702211:web:664cd107cc446f5a16a776",
+        measurementId: "G-M7305J8L6J"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const questionBank = [
+        { question: "香港最高嘅山峰係邊座？", options: ["獅子山", "大帽山", "鳳凰山", "太平山"], answer: 1 },
+        { question: "世界上最大嘅海洋係邊個？", options: ["大西洋", "印度洋", "太平洋", "北冰洋"], answer: 2 },
+        { question: "人類第一次登陸月球係邊一年？", options: ["1965", "1969", "1972", "1980"], answer: 1 },
+        { question: "太陽系入面最大嘅行星係？", options: ["火星", "地球", "土星", "木星"], answer: 3 },
+        { question: "邊種動物被稱為「萬獸之王」？", options: ["獅子", "老虎", "大象", "犀牛"], answer: 0 },
+        { question: "水嘅化學符號係咩？", options: ["CO2", "O2", "H2O", "HO2"], answer: 2 },
+        { question: "香港嘅區花係咩？", options: ["梅花", "洋紫荊", "木棉花", "荷花"], answer: 1 },
+        { question: "一年有幾多個月份有 31 日？", options: ["5個", "6個", "7個", "8個"], answer: 2 },
+        { question: "世界上最長嘅河流係？", options: ["尼羅河", "亞馬遜河", "長江", "密西西比河"], answer: 0 },
+        { question: "圓周率 (Pi) 嘅大約數值係？", options: ["3.12", "3.14", "3.16", "3.18"], answer: 1 },
+        { question: "《蒙娜麗莎》係邊位著名畫家嘅作品？", options: ["梵高", "畢加索", "米高安哲羅", "達文西"], answer: 3 },
+        { question: "人體最大嘅器官係咩？", options: ["皮膚", "肝臟", "肺", "大腦"], answer: 0 },
+        { question: "奧運會標誌有幾多個圓環？", options: ["4個", "5個", "6個", "7個"], answer: 1 },
+        { question: "邊個國家係發明壽司嘅發源地？", options: ["韓國", "中國", "日本", "泰國"], answer: 2 },
+        { question: "光速大約每秒幾多萬公里？", options: ["30萬", "40萬", "50萬", "60萬"], answer: 0 },
+        { question: "著名景點「大三巴牌坊」喺邊個城市？", options: ["珠海", "澳門", "廣州", "深圳"], answer: 1 },
+        { question: "中國古代四大發明「不包括」以下邊一樣？", options: ["指南針", "火藥", "造紙術", "地動儀"], answer: 3 },
+        { question: "哈利波特額頭上面嘅疤痕係咩形狀？", options: ["星星", "月亮", "閃電", "十字"], answer: 2 },
+        { question: "地球上總共有幾多個大洲？", options: ["5個", "6個", "7個", "8個"], answer: 2 },
+        { question: "一副完整嘅撲克牌（唔計鬼牌/Joker）有幾多隻？", options: ["52隻", "54隻", "56隻", "58隻"], answer: 0 }
+    ];
+
+    let currentUserCell = ""; let currentUserName = ""; let selectedDifficultyName = "";
+    let selectedQuestions = []; let currentQuestionIndex = 0; let score = 0;
+    let pointsPerQuestion = 0; let maxScore = 0; let timerInterval; let timeRemaining = 0;
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+        document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function login() {
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value;
+        if (pass !== "Peter2026") { alert("密碼錯誤！"); return; }
+        
+        if (user === "manager101") {
+            showScreen('admin-screen');
+            loadAdminRecords();
+        } else if (user === "Sapling" || user === "Devotion") {
+            currentUserCell = user;
+            document.getElementById('display-cell').innerText = user;
+            showScreen('menu-screen');
+        } else { 
+            alert("帳號不存在！請輸入 Sapling, Devotion 或 manager101"); 
+        }
+    }
+
+    function showNameScreen() {
+        document.getElementById('user-real-name').value = '';
+        showScreen('name-screen');
+    }
+
+    function goBackToMenu() {
+        showScreen('menu-screen');
+    }
+
+    async function submitName() {
+        const nameInput = document.getElementById('user-real-name').value.trim();
+        if (!nameInput) { alert("請輸入你的真實姓名！"); return; }
+        
+        const btn = document.getElementById('submit-name-btn');
+        btn.innerText = "驗證中...";
+        btn.disabled = true;
+
+        try {
+            const snapshot = await db.collection("quizRecords").where("name", "==", nameInput).get();
+            
+            if (!snapshot.empty) {
+                const recordData = snapshot.docs[0].data();
+                document.getElementById('personal-score-display').innerText = `${recordData.score} (難度: ${recordData.difficulty})`;
+                showScreen('personal-score-screen');
+            } else {
+                currentUserName = nameInput;
+                document.getElementById('display-name').innerText = currentUserName;
+                showScreen('setup-screen');
+            }
+        } catch (error) {
+            console.error("驗證姓名失敗: ", error);
+            alert("連接伺服器失敗，請檢查網絡連線。");
+        } finally {
+            btn.innerText = "驗證並下一步";
+            btn.disabled = false;
+        }
+    }
+
+    async function showLeaderboard() {
+        showScreen('leaderboard-screen');
+        const list = document.getElementById('top5-list');
+        list.innerHTML = "<li>載入中，請稍候...</li>";
+
+        try {
+            const snapshot = await db.collection("quizRecords").orderBy("numericScore", "desc").limit(5).get();
+            list.innerHTML = "";
+
+            if (snapshot.empty) {
+                list.innerHTML = "<li>暫時未有任何成績記錄。</li>";
+                return;
+            }
+
+            let rank = 1;
+            const medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const li = document.createElement('li');
+                li.innerHTML = `${medals[rank-1]} ${data.name} <span style="color:#007bff; float:right;">${data.score}</span>`;
+                list.appendChild(li);
+                rank++;
+            });
+        } catch (error) {
+            console.error("載入排行榜失敗: ", error);
+            list.innerHTML = "<li>載入失敗，可能需要首次建立資料庫索引，或檢查網絡。</li>";
+        }
+    }
+
+    function shuffleArray(array) {
+        let shuffled = array.slice();
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    function startQuiz(minutes, points, max, difficultyName) {
+        pointsPerQuestion = points; maxScore = max; selectedDifficultyName = difficultyName;
+        score = 0; currentQuestionIndex = 0;
+        
+        showScreen('quiz-screen');
+        document.getElementById('score-info').innerText = `每題 ${pointsPerQuestion} 分`;
+        
+        selectedQuestions = shuffleArray(questionBank).slice(0, 10);
+        timeRemaining = minutes * 60;
+        updateTimerDisplay();
+        timerInterval = setInterval(countdown, 1000);
+        loadQuestion();
+    }
+
+    function countdown() {
+        timeRemaining--;
+        updateTimerDisplay();
+        if (timeRemaining <= 0) endQuiz();
+    }
+
+    function updateTimerDisplay() {
+        let minutes = Math.floor(timeRemaining / 60); 
+        let seconds = timeRemaining % 60;
+        document.getElementById('time-left').innerText = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function loadQuestion() {
+        if (currentQuestionIndex >= 10) { endQuiz(); return; }
+        const currentQ = selectedQuestions[currentQuestionIndex];
+        document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
+        document.getElementById('question-text').innerText = currentQ.question;
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        currentQ.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn'; 
+            btn.innerText = opt;
+            btn.onclick = () => selectAnswer(index);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function selectAnswer(selectedIndex) {
+        if (selectedIndex === selectedQuestions[currentQuestionIndex].answer) score += pointsPerQuestion;
+        currentQuestionIndex++;
+        loadQuestion();
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        showScreen('result-screen');
+        const finalScoreText = `${score} / ${maxScore}`;
+        document.getElementById('score-display').innerText = "上傳中...";
+
+        // 格式化日期及時間
+        const now = new Date();
+        const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+        db.collection("quizRecords").add({
+            date: formattedDate, // 清晰的日期時間格式
+            cell: currentUserCell,
+            name: currentUserName,
+            difficulty: selectedDifficultyName,
+            score: finalScoreText,
+            numericScore: score, 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            document.getElementById('score-display').innerText = finalScoreText;
+        }).catch((error) => {
+            alert("上傳成績失敗，請檢查網絡連線。");
+        });
+    }
+
+    function loadAdminRecords() {
+        const tbody = document.getElementById('admin-table-body');
+        const loadingText = document.getElementById('loading-text');
+        tbody.innerHTML = '';
+        loadingText.innerText = "資料載入中，請稍候...";
+
+        db.collection("quizRecords").orderBy("timestamp", "desc").get().then((querySnapshot) => {
+            loadingText.innerText = "";
+            if (querySnapshot.empty) {
+                tbody.innerHTML = '<tr><td colspan="5">暫時未有測驗記錄</td></tr>';
+                return;
+            }
+            querySnapshot.forEach((doc) => {
+                const record = doc.data();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${record.date || '未知時間'}</td>
+                    <td>${record.cell}</td>
+                    <td>${record.name}</td>
+                    <td>${record.difficulty}</td>
+                    <td style="font-weight:bold; color:#007bff;">${record.score}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }).catch((error) => {
+            loadingText.innerText = "載入失敗！";
+        });
+    }
+
+    function clearRecords() {
+        if(confirm("確定要清除所有測驗記錄嗎？呢個操作無法復原！")) {
+            const loadingText = document.getElementById('loading-text');
+            loadingText.innerText = "正在清除資料...";
+            
+            db.collection("quizRecords").get().then((querySnapshot) => {
+                const batch = db.batch();
+                querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
+                return batch.commit();
+            }).then(() => {
+                alert("已成功清除所有記錄！");
+                loadAdminRecords();
+            }).catch((error) => {
+                alert("清除失敗！");
+            });
+        }
+    }
+
+    function logout() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('user-real-name').value = '';
+        currentUserCell = ""; currentUserName = "";
+        showScreen('login-screen');
+    }
+</script>
+
+</body>
+</html>
