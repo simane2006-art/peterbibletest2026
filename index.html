@@ -169,6 +169,7 @@
     let selectedQuestions = []; let currentQuestionIndex = 0; 
     let userAnswers = [];
     let pointsPerQuestion = 0; let maxScore = 0; let timerInterval; let timeRemaining = 0;
+    let endTime = 0; // 🌟 新增：紀錄絕對交卷時間
     
     let isQuizActive = false; 
     let currentDocId = null; 
@@ -319,9 +320,10 @@
         document.getElementById('score-info').innerText = `每題 ${pointsPerQuestion} 分`;
         selectedQuestions = shuffleArray(questionBank).slice(0, 10);
         buildNavGrid(); 
-        timeRemaining = minutes * 60;
-        updateTimerDisplay();
+        // 🌟 新寫法：鎖定現實世界嘅「絕對結束時間」
+        endTime = Date.now() + (minutes * 60 * 1000); 
         timerInterval = setInterval(countdown, 1000);
+        countdown(); // 即刻執行一次，避免第一秒延遲
         loadQuestion();
     }
 
@@ -350,10 +352,17 @@
     function nextQuestion() { if (currentQuestionIndex < 9) { currentQuestionIndex++; loadQuestion(); } }
 
     function countdown() {
-        timeRemaining--; updateTimerDisplay();
-        if (timeRemaining <= 0) endQuiz("⏰ 時間到自動交卷"); 
+        // 🌟 核心破解：用「結束時間」減去「當下現實時間」
+        timeRemaining = Math.floor((endTime - Date.now()) / 1000);
+        
+        if (timeRemaining <= 0) {
+            timeRemaining = 0;
+            updateTimerDisplay();
+            endQuiz("⏰ 時間到自動交卷"); 
+        } else {
+            updateTimerDisplay();
+        }
     }
-
     function updateTimerDisplay() {
         let minutes = Math.floor(timeRemaining / 60); let seconds = timeRemaining % 60;
         document.getElementById('time-left').innerText = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
