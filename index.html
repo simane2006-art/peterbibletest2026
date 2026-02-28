@@ -11,21 +11,20 @@
         input[type="text"], input[type="password"] { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
         button { background-color: #007bff; color: white; border: none; padding: 10px 20px; margin: 10px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
         button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #a0c4ff; cursor: not-allowed; }
         .btn-danger { background-color: #dc3545; }
         .btn-danger:hover { background-color: #c82333; }
         .btn-secondary { background-color: #6c757d; }
         .btn-secondary:hover { background-color: #5a6268; }
         
-        /* 選擇題按鈕樣式 */
         .option-btn { display: block; width: 100%; margin: 10px 0; background-color: #e9ecef; color: #333; text-align: left; transition: all 0.2s; }
         .option-btn:hover { background-color: #d3d9df; }
-        .option-btn.selected { background-color: #007bff; color: white; font-weight: bold; } /* 已選答案的樣式 */
+        .option-btn.selected { background-color: #007bff; color: white; font-weight: bold; } 
         
-        /* 題目導航欄樣式 */
         .q-nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
         .q-nav-btn { padding: 10px; margin: 0; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        .q-nav-btn.answered { background-color: #28a745; color: white; border-color: #28a745; } /* 已答題 */
-        .q-nav-btn.active { border: 3px solid #007bff; font-weight: bold; box-shadow: 0 0 5px rgba(0,123,255,0.5); } /* 當前題目 */
+        .q-nav-btn.answered { background-color: #28a745; color: white; border-color: #28a745; } 
+        .q-nav-btn.active { border: 3px solid #007bff; font-weight: bold; box-shadow: 0 0 5px rgba(0,123,255,0.5); } 
 
         #timer { font-size: 20px; font-weight: bold; color: #dc3545; margin-bottom: 15px; }
         .hidden { display: none; }
@@ -78,24 +77,23 @@
 
 <div class="container hidden" id="personal-score-screen">
     <h2>⚠️ 你已經完成過測驗！</h2>
-    <p>系統紀錄顯示你已經作答過，以下係你當時嘅成績：</p>
+    <p>系統紀錄顯示你已經作答過（或者曾經中途退出），以下係你嘅成績：</p>
     <h1 id="personal-score-display" style="color: #007bff;"></h1>
+    <p id="personal-status-display" style="color: #dc3545; font-weight: bold;"></p>
     <button class="btn-secondary" onclick="goBackToMenu()">🔙 返回主選單</button>
 </div>
 
 <div class="container hidden" id="setup-screen">
     <h2>📝 選擇難度</h2>
     <p><span id="display-name" style="font-weight:bold;"></span>，請選擇：</p>
-    <button onclick="startQuiz(10, 10, 100, '低難度')">🟢 低難度 (10分鐘)</button>
-    <button onclick="startQuiz(5, 12.5, 125, '中難度')">🟡 中難度 (5分鐘)</button>
-    <button onclick="startQuiz(2, 15, 150, '高難度')">🔴 高難度 (2分鐘)</button>
+    <button onclick="startQuiz(10, 10, 100, '低難度', this)">🟢 低難度 (10分鐘)</button>
+    <button onclick="startQuiz(5, 12.5, 125, '中難度', this)">🟡 中難度 (5分鐘)</button>
+    <button onclick="startQuiz(2, 15, 150, '高難度', this)">🔴 高難度 (2分鐘)</button>
 </div>
 
 <div class="container hidden" id="quiz-screen">
     <div id="timer">剩餘時間: <span id="time-left">00:00</span></div>
-    
     <div id="question-nav" class="q-nav-grid"></div>
-    
     <div id="progress" style="font-weight:bold; margin-top:10px;">第 <span id="current-q-num">1</span> / 10 題</div>
     <div class="score-info" id="score-info">每題 0 分</div>
     <hr>
@@ -124,7 +122,7 @@
     <p id="loading-text" style="color: #007bff; font-weight: bold;"></p>
     <table>
         <thead>
-            <tr><th>完成日期及時間</th><th>Cell 帳號</th><th>姓名</th><th>難度</th><th>狀態</th><th>分數</th></tr>
+            <tr><th>完成日期</th><th>Cell 帳號</th><th>姓名</th><th>難度</th><th>狀態</th><th>分數</th></tr>
         </thead>
         <tbody id="admin-table-body"></tbody>
     </table>
@@ -172,38 +170,13 @@
     let userAnswers = [];
     let pointsPerQuestion = 0; let maxScore = 0; let timerInterval; let timeRemaining = 0;
     
-    // 用嚟標記測驗係咪進行中，如果進行中意外離開，就會觸發自動交卷
     let isQuizActive = false; 
+    let currentDocId = null; // 紀錄當前資料庫紀錄嘅 ID
 
-    // 1. 防誤關警告機制 (當按下 X 關閉分頁時彈出提示)
+    // 防誤關警告機制
     window.addEventListener('beforeunload', function (e) {
         if (isQuizActive) {
-            e.preventDefault();
-            e.returnValue = ''; // 瀏覽器預設的警告視窗
-        }
-    });
-
-    // 2. 意外關閉極速儲存機制 (如果佢夾硬關閉或者跳去第二個網頁，強制交卷)
-    window.addEventListener('pagehide', function() {
-        if (isQuizActive) {
-            isQuizActive = false; // 避免重複上傳
-            const finalCalculatedScore = calculateFinalScore();
-            const finalScoreText = `${finalCalculatedScore} / ${maxScore}`;
-            
-            const now = new Date();
-            const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
-            // 背景強行寫入 Firebase
-            db.collection("quizRecords").add({
-                date: formattedDate,
-                cell: currentUserCell,
-                name: currentUserName,
-                difficulty: selectedDifficultyName,
-                score: finalScoreText,
-                numericScore: finalCalculatedScore, 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                status: "⚠️ 意外退出/中途關閉"
-            });
+            e.preventDefault(); e.returnValue = ''; 
         }
     });
 
@@ -237,8 +210,10 @@
         try {
             const snapshot = await db.collection("quizRecords").where("name", "==", nameInput).get();
             if (!snapshot.empty) {
+                // 如果搵到記錄，證明佢已經考過，或者曾經意外退出！
                 const recordData = snapshot.docs[0].data();
                 document.getElementById('personal-score-display').innerText = `${recordData.score} (難度: ${recordData.difficulty})`;
+                document.getElementById('personal-status-display').innerText = `記錄狀態: ${recordData.status}`;
                 showScreen('personal-score-screen');
             } else {
                 currentUserName = nameInput; document.getElementById('display-name').innerText = currentUserName;
@@ -273,18 +248,44 @@
         return shuffled;
     }
 
-    function startQuiz(minutes, points, max, difficultyName) {
+    // 🌟 重點：開始測驗前，先喺 Firebase 開定一張「意外退出」嘅成績表
+    async function startQuiz(minutes, points, max, difficultyName, btnElement) {
+        const originalText = btnElement.innerText;
+        btnElement.innerText = "連線中..."; btnElement.disabled = true;
+        
         pointsPerQuestion = points; maxScore = max; selectedDifficultyName = difficultyName;
-        userAnswers = new Array(10).fill(null); // 初始化 10 條空答案
+        userAnswers = new Array(10).fill(null); 
         currentQuestionIndex = 0;
-        isQuizActive = true; // 測驗正式開始
+        
+        const now = new Date();
+        const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+        try {
+            // 預先建立記錄，預設狀態係「⚠️ 意外退出/中途關閉」，0 分
+            const docRef = await db.collection("quizRecords").add({
+                date: formattedDate,
+                cell: currentUserCell,
+                name: currentUserName,
+                difficulty: selectedDifficultyName,
+                score: `0 / ${maxScore}`,
+                numericScore: 0, 
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: "⚠️ 意外退出/中途關閉"
+            });
+            currentDocId = docRef.id; // 記住呢張成績表個 ID
+        } catch (error) {
+            alert("連接伺服器失敗，請檢查網絡連線。");
+            btnElement.innerText = originalText; btnElement.disabled = false;
+            return;
+        }
+        
+        btnElement.innerText = originalText; btnElement.disabled = false;
+        isQuizActive = true; 
         
         showScreen('quiz-screen');
         document.getElementById('score-info').innerText = `每題 ${pointsPerQuestion} 分`;
         selectedQuestions = shuffleArray(questionBank).slice(0, 10);
-        
         buildNavGrid(); 
-        
         timeRemaining = minutes * 60;
         updateTimerDisplay();
         timerInterval = setInterval(countdown, 1000);
@@ -296,8 +297,7 @@
         navContainer.innerHTML = '';
         for (let i = 0; i < 10; i++) {
             const btn = document.createElement('button');
-            btn.className = 'q-nav-btn';
-            btn.innerText = i + 1;
+            btn.className = 'q-nav-btn'; btn.innerText = i + 1;
             btn.onclick = () => jumpToQuestion(i);
             navContainer.appendChild(btn);
         }
@@ -345,13 +345,23 @@
         });
     }
 
+    // 🌟 重點：每揀一個答案，系統都會即時結算並 Update 上雲端
     function selectAnswer(selectedIndex) {
         userAnswers[currentQuestionIndex] = selectedIndex; 
         loadQuestion(); 
+        
+        // 即時結算並背景上傳
+        if (currentDocId) {
+            const currentScore = calculateFinalScore();
+            db.collection("quizRecords").doc(currentDocId).update({
+                score: `${currentScore} / ${maxScore}`,
+                numericScore: currentScore
+            });
+        }
+        
         if (currentQuestionIndex < 9) { setTimeout(() => { nextQuestion(); }, 300); }
     }
 
-    // 計算分數：冇答 (null) 或者答錯，都唔會加分
     function calculateFinalScore() {
         let finalScore = 0;
         for (let i = 0; i < 10; i++) {
@@ -367,13 +377,12 @@
         let confirmMsg = "確定要交卷嗎？";
         if (unansweredCount > 0) confirmMsg = `你仲有 ${unansweredCount} 題未答！確定要提早交卷？未答的題目將作零分計算。`;
         
-        if (confirm(confirmMsg)) {
-            endQuiz("✅ 正常交卷");
-        }
+        if (confirm(confirmMsg)) { endQuiz("✅ 正常交卷"); }
     }
 
+    // 🌟 重點：正常交卷時，只需更新狀態為「正常交卷」
     function endQuiz(statusMsg = "✅ 正常交卷") {
-        isQuizActive = false; // 解除意外退出防護，因為已經正常交緊卷
+        isQuizActive = false; 
         clearInterval(timerInterval);
         
         const finalCalculatedScore = calculateFinalScore();
@@ -382,23 +391,18 @@
         const finalScoreText = `${finalCalculatedScore} / ${maxScore}`;
         document.getElementById('score-display').innerText = "上傳中...";
 
-        const now = new Date();
-        const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
-        db.collection("quizRecords").add({
-            date: formattedDate,
-            cell: currentUserCell,
-            name: currentUserName,
-            difficulty: selectedDifficultyName,
-            score: finalScoreText,
-            numericScore: finalCalculatedScore, 
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            status: statusMsg // 記錄埋係點樣交卷
-        }).then(() => {
-            document.getElementById('score-display').innerText = finalScoreText;
-        }).catch((error) => {
-            alert("上傳成績失敗，請檢查網絡。");
-        });
+        if (currentDocId) {
+            db.collection("quizRecords").doc(currentDocId).update({
+                score: finalScoreText,
+                numericScore: finalCalculatedScore, 
+                status: statusMsg
+            }).then(() => {
+                document.getElementById('score-display').innerText = finalScoreText;
+            }).catch(() => {
+                alert("更新最終成績失敗，但你的分數已自動備份。");
+                document.getElementById('score-display').innerText = finalScoreText;
+            });
+        }
     }
 
     function loadAdminRecords() {
