@@ -45,7 +45,7 @@
 
 <div class="container" id="login-screen">
     <h2>🔐 系統登入</h2>
-    <input type="text" id="username" placeholder="請輸入帳號 (Sapling/Devotion/manager101)"><br>
+    <input type="text" id="username" placeholder="請輸入帳號 (Sapling/Devotion)"><br>
     <input type="password" id="password" placeholder="請輸入密碼"><br>
     <button onclick="login()">登入</button>
 </div>
@@ -198,14 +198,28 @@
     function login() {
         const user = document.getElementById('username').value.trim();
         const pass = document.getElementById('password').value;
-        if (pass !== "Peter2026") { alert("密碼錯誤！"); return; }
         
+        // 情況 1：管理員帳號
         if (user === "manager101") {
-            showScreen('admin-screen'); loadAdminRecords();
+            if (pass === "admin101") {
+                showScreen('admin-screen'); 
+                loadAdminRecords();
+            } else {
+                alert("管理員密碼錯誤！");
+            }
+        // 情況 2：一般使用者帳號 (Sapling 或 Devotion)
         } else if (user === "Sapling" || user === "Devotion") {
-            currentUserCell = user; document.getElementById('display-cell').innerText = user;
-            showScreen('menu-screen');
-        } else { alert("帳號不存在！"); }
+            if (pass === "Peter2026") {
+                currentUserCell = user; 
+                document.getElementById('display-cell').innerText = user;
+                showScreen('menu-screen');
+            } else {
+                alert("密碼錯誤！");
+            }
+        // 情況 3：亂打帳號
+        } else {
+            alert("帳號不存在！");
+        }
     }
 
     function showNameScreen() { document.getElementById('user-real-name').value = ''; showScreen('name-screen'); }
