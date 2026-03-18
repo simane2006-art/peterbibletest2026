@@ -3,508 +3,819 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>限時隨機測驗系統 (雙重防護版)</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
-        .admin-container { max-width: 800px; overflow-x: auto; }
-        input[type="text"], input[type="password"] { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; margin: 10px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
-        button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #a0c4ff; cursor: not-allowed; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #c82333; }
-        .btn-secondary { background-color: #6c757d; }
-        .btn-secondary:hover { background-color: #5a6268; }
-        
-        .option-btn { display: block; width: 100%; margin: 10px 0; background-color: #e9ecef; color: #333; text-align: left; transition: all 0.2s; }
-        .option-btn:hover { background-color: #d3d9df; }
-        .option-btn.selected { background-color: #007bff; color: white; font-weight: bold; } 
-        
-        .q-nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
-        .q-nav-btn { padding: 10px; margin: 0; background-color: #fff; color: #333; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
-        .q-nav-btn.answered { background-color: #28a745; color: white; border-color: #28a745; } 
-        .q-nav-btn.active { border: 3px solid #007bff; font-weight: bold; box-shadow: 0 0 5px rgba(0,123,255,0.5); } 
-
-        #timer { font-size: 20px; font-weight: bold; color: #dc3545; margin-bottom: 15px; }
-        .hidden { display: none; }
-        .question-text { font-size: 18px; margin-bottom: 20px; font-weight: bold; }
-        .score-info { font-size: 14px; color: #666; margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 650px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background-color: #007bff; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        ol.leaderboard-list { text-align: left; font-size: 18px; display: inline-block; padding-left: 20px; }
-        ol.leaderboard-list li { margin: 15px 0; font-weight: bold; }
-    </style>
+    <title>馬太福音問答比賽 (桌面版)</title>
     
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f5;
+            margin: 0;
+            padding: 40px 20px; /* 增加上下邊距，適合電腦螢幕 */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        /* 桌面版主要容器，加寬至 800px */
+        .app-container {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .screen { display: none; padding: 40px; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 頂部導航列設計 */
+        .header-bar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: -40px -40px 30px -40px; /* 貼齊邊緣 */
+        }
+        .header-bar h2 { margin: 0; font-size: 22px; color: white; text-align: left; }
+        .header-bar .user-info { font-size: 14px; opacity: 0.9; }
+        .header-bar a { color: #ecf0f1; text-decoration: underline; cursor: pointer; margin-left: 15px; }
+        .header-bar a:hover { color: #fff; }
+
+        h2 { color: #2c3e50; text-align: center; margin-top: 0; margin-bottom: 25px;}
+        h3 { color: #34495e; }
+        
+        /* 表單元素 */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: #fcfcfc;
+            transition: border-color 0.3s;
+        }
+        input:focus { outline: none; border-color: #3498db; background-color: #fff; }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover { background-color: #2980b9; transform: translateY(-1px); }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; transform: none; }
+        .btn-block { width: 100%; }
+        .btn-secondary { background-color: #7f8c8d; }
+        .btn-secondary:hover { background-color: #636e72; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-success { background-color: #2ecc71; }
+        .btn-success:hover { background-color: #27ae60; }
+        
+        /* 雙欄卡片設計 (儀表板用) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+        }
+
+        /* 測驗專用樣式 */
+        .quiz-container { display: flex; flex-direction: column; gap: 20px; }
+        
+        #options { display: grid; gap: 12px; }
+        #options button {
+            background-color: #f8f9fa;
+            color: #333;
+            text-align: left;
+            border: 2px solid #e2e8f0;
+            font-weight: normal;
+            font-size: 18px; /* 電腦版字體加大 */
+            padding: 16px 20px;
+        }
+        #options button:hover { background-color: #eef2f5; border-color: #cbd5e1; }
+        #options button.selected { background-color: #3498db; color: white; border-color: #3498db; }
+        
+        .timer-bar { 
+            display: flex; justify-content: space-between; 
+            font-size: 18px; font-weight: bold; 
+            padding: 15px 20px; background: #fff3cd; border-radius: 8px; color: #856404;
+            margin-bottom: 20px;
+        }
+        .timer-bar.danger { background: #f8d7da; color: #721c24; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        
+        /* 導航數字按鈕 */
+        .nav-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        #nav-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        #nav-grid button { 
+            width: 45px; height: 45px; padding: 0; font-size: 16px; 
+            border-radius: 6px; background: #e2e8f0; color: #475569; 
+            font-weight: normal; border: 2px solid transparent;
+        }
+        #nav-grid button:hover { background: #cbd5e1; }
+        #nav-grid button.answered { background: #2ecc71; color: white; }
+        #nav-grid button.current { border-color: #2c3e50; font-weight: bold; transform: scale(1.05); }
+        
+        /* 表格樣式 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 16px; background: white; }
+        th, td { border: 1px solid #dee2e6; padding: 12px 15px; text-align: center; }
+        th { background-color: #f1f3f5; color: #495057; }
+        
+        /* 登入區塊置中變窄 */
+        .login-box { max-width: 400px; margin: 0 auto; }
+
+        @media (max-width: 600px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .header-bar { flex-direction: column; gap: 10px; text-align: center; }
+        }
+    </style>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
+
+    <script>
+        // Firebase 設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyCud2BDeVczN5h_bi9SVF6Bi0A1DX3gPfU",
+            authDomain: "peterbiblereading2026.firebaseapp.com",
+            projectId: "peterbiblereading2026",
+            storageBucket: "peterbiblereading2026.firebasestorage.app",
+            messagingSenderId: "543051702211",
+            appId: "1:543051702211:web:664cd107cc446f5a16a776",
+            measurementId: "G-M7305J8L6J"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const analytics = firebase.analytics();
+    </script>
 </head>
 <body>
 
-<div class="container" id="login-screen">
-    <h2>🔐 系統登入</h2>
-    <input type="text" id="username" placeholder="請輸入帳號 (Sapling/Devotion)"><br>
-    <input type="password" id="password" placeholder="請輸入密碼"><br>
-    <button onclick="login()">登入</button>
-</div>
+<div class="app-container">
 
-<div class="container hidden" id="menu-screen">
-    <h2>📱 主選單</h2>
-    <p>Cell: <span id="display-cell" style="font-weight:bold; color:#007bff;"></span></p>
-    <button onclick="showNameScreen()">▶️ 開始測驗</button>
-    <button onclick="showLeaderboard()">🏆 查看成績 (Top 5)</button>
-    <br><br>
-    <button class="btn-danger" onclick="logout()">登出</button>
-</div>
+    <div id="login-screen" class="screen active">
+        <h2>📖 馬太福音問答比賽 - 系統登入</h2>
+        <div class="login-box">
+            <p style="text-align: center; color: #7f8c8d; margin-bottom: 25px;">請輸入所屬的小組帳號及密碼以進入測驗系統</p>
+            <div class="form-group">
+                <label for="username">小組帳號 (如: Sapling, Devotion)</label>
+                <input type="text" id="username" placeholder="輸入帳號">
+            </div>
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" placeholder="輸入密碼">
+            </div>
+            <button class="btn-block" onclick="login()">登入系統</button>
+        </div>
+    </div>
 
-<div class="container hidden" id="leaderboard-screen">
-    <h2>🏆 最高分 Top 5 排行榜</h2>
-    <hr>
-    <ol id="top5-list" class="leaderboard-list"></ol>
-    <br>
-    <button class="btn-secondary" onclick="goBackToMenu()">🔙 返回主選單</button>
-</div>
+    <div id="cell-home-screen" class="screen">
+        <div class="header-bar">
+            <h2>📖 系統儀表板</h2>
+            <div class="user-info">
+                登入小組：<strong id="display-cell" style="color: #f1c40f; font-size: 16px;"></strong>
+                <a onclick="logout()">登出</a>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>👤 參賽者報到</h3>
+                <p style="color: #666; margin-bottom: 20px;">請輸入你的真實姓名。系統將自動驗證你是否已完成測驗，或引導你進入測驗畫面。</p>
+                <div class="form-group">
+                    <input type="text" id="user-real-name" placeholder="請輸入你的真實姓名">
+                </div>
+                <button id="submit-name-btn" class="btn-block btn-success" onclick="submitName()">驗證身分並開始</button>
+            </div>
+            
+            <div class="card">
+                <h3>🏆 賽事資訊</h3>
+                <p style="color: #666; margin-bottom: 20px;">查看目前系統中的榮譽排行榜，了解大家的分數狀況。</p>
+                <button class="btn-block btn-secondary" onclick="loadLeaderboard(); showScreen('leaderboard-screen')">查看排行榜 (Top 10)</button>
+            </div>
+        </div>
+    </div>
 
-<div class="container hidden" id="name-screen">
-    <h2>📝 準備開始</h2>
-    <p>請輸入你的真實姓名 (每個人只可作答一次)：</p>
-    <input type="text" id="user-real-name" placeholder="例如：陳大文"><br>
-    <button id="submit-name-btn" onclick="submitName()">驗證並下一步</button>
-    <button class="btn-secondary" onclick="goBackToMenu()">返回</button>
-</div>
+<div id="setup-screen" class="screen">
+        <div class="header-bar">
+            <h2>🚀 準備開始測驗</h2>
+            <div class="user-info">參賽者：<strong id="display-name"></strong> | <a onclick="showScreen('cell-home-screen')">返回</a></div>
+        </div>
+        <div style="text-align: center; padding: 40px 20px;">
+            <h2 style="font-size: 28px; color: #2980b9;">你好，<span id="welcome-name"></span>！</h2>
+            <p style="font-size: 18px; color: #555; max-width: 600px; margin: 0 auto 30px auto; line-height: 1.6;">
+                本次測驗共有 <strong>10</strong> 題選擇題。<br>
+                請選擇適合你的難度，點擊後將<strong>立即開始計時</strong>！
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: 0 auto;">
+                <button onclick="startQuiz(10, 10, 100, '低難度', this)" class="btn-success" style="padding: 15px; font-size: 18px;">
+                    🟢 低難度 (限時 10 分鐘) <br><span style="font-size: 14px; font-weight: normal;">每題 10 分，滿分 100 分</span>
+                </button>
+                
+                <button onclick="startQuiz(5, 12.5, 125, '中難度', this)" style="background-color: #f39c12; color: white; padding: 15px; font-size: 18px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                    🟡 中難度 (限時 5 分鐘) <br><span style="font-size: 14px; font-weight: normal;">每題 12.5 分，滿分 125 分</span>
+                </button>
+                
+                <button onclick="startQuiz(2, 15, 150, '高難度', this)" class="btn-danger" style="padding: 15px; font-size: 18px;">
+                    🔴 高難度 (限時 2 分鐘) <br><span style="font-size: 14px; font-weight: normal;">每題 15 分，滿分 150 分</span>
+                </button>
+            </div>
+            
+        </div>
+    </div>
 
-<div class="container hidden" id="personal-score-screen">
-    <h2>⚠️ 系統鎖定：你已經進行過測驗！</h2>
-    <p>系統紀錄顯示你已經作答過（或曾經中途退出），以下係你嘅成績：</p>
-    <h1 id="personal-score-display" style="color: #007bff;"></h1>
-    <p id="personal-status-display" style="color: #dc3545; font-weight: bold;"></p>
-    <button class="btn-secondary" onclick="goBackToMenu()">🔙 返回主選單</button>
-</div>
+    <div id="personal-score-screen" class="screen">
+        <div class="header-bar">
+            <h2>📊 歷史測驗紀錄</h2>
+            <div class="user-info"><a onclick="showScreen('cell-home-screen')">返回儀表板</a></div>
+        </div>
+        <div style="text-align:center; padding: 20px;">
+            <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 40px 20px; border-radius: 12px; margin-bottom: 30px;">
+                <p style="font-size: 20px; margin:0 0 15px 0; color: #555;">🏆 系統紀錄成績</p>
+                <strong id="personal-score-display" style="font-size: 36px; color:#2980b9;"></strong>
+                <p style="color: #7f8c8d; margin-top:20px;" id="personal-status-display"></p>
+            </div>
+            
+            <div id="review-btn-container"></div>
+            
+            <button class="btn-secondary" onclick="showScreen('cell-home-screen')" style="margin-top:20px; width: 200px;">返回</button>
+        </div>
+    </div>
 
-<div class="container hidden" id="setup-screen">
-    <h2>📝 選擇難度</h2>
-    <p><span id="display-name" style="font-weight:bold;"></span>，請選擇：</p>
-    <button onclick="startQuiz(10, 10, 100, '低難度', this)">🟢 低難度 (10分鐘)</button>
-    <button onclick="startQuiz(5, 12.5, 125, '中難度', this)">🟡 中難度 (5分鐘)</button>
-    <button onclick="startQuiz(2, 15, 150, '高難度', this)">🔴 高難度 (2分鐘)</button>
-</div>
+    <div id="quiz-screen" class="screen">
+        <div class="timer-bar" id="timer-bar-container">
+            <span id="score-info"></span>
+            <span id="timer"></span>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
+            <span id="question-number" style="display: inline-block; background: #eef2f5; color:#475569; padding: 5px 12px; border-radius: 20px; font-size: 14px; margin-bottom: 15px; font-weight: bold;"></span>
+            <h2 id="question-text" style="color:#2c3e50; text-align: left; font-size: 22px; line-height: 1.5;"></h2>
+            <div id="options"></div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-secondary" onclick="prevQuestion()" style="width: 150px;">⬅️ 上一題</button>
+            <button class="btn-danger" onclick="endQuiz('✅ 正常交卷')" style="width: 150px;">📥 確認交卷</button>
+            <button onclick="nextQuestion()" style="width: 150px;">下一題 ➡️</button>
+        </div>
+        
+        <div class="nav-section">
+            <p style="margin-top: 0; font-weight: bold; color: #475569; font-size: 14px;">快速跳轉：</p>
+            <div id="nav-grid"></div>
+        </div>
+    </div>
 
-<div class="container hidden" id="quiz-screen">
-    <div id="timer">剩餘時間: <span id="time-left">00:00</span></div>
-    <div id="question-nav" class="q-nav-grid"></div>
-    <div id="progress" style="font-weight:bold; margin-top:10px;">第 <span id="current-q-num">1</span> / 10 題</div>
-    <div class="score-info" id="score-info">每題 0 分</div>
-    <hr>
-    <div class="question-text" id="question-text">題目載入中...</div>
-    <div id="options-container"></div>
-    
-    <br>
-    <button class="btn-secondary" onclick="prevQuestion()">上一題</button>
-    <button class="btn-secondary" onclick="nextQuestion()">下一題</button>
-    <br><br>
-    <button class="btn-danger" style="width:100%;" onclick="submitQuizEarly()">📥 提早交卷 / 完成作答</button>
-</div>
+    <div id="result-screen" class="screen" style="text-align:center;">
+        <div style="padding: 60px 20px;">
+            <h2 style="font-size: 32px;">🎉 測驗結束！</h2>
+            <div style="padding: 40px; background: #e8f5e9; border: 2px solid #c8e6c9; border-radius: 12px; margin: 30px auto; max-width: 400px;">
+                <h3 id="final-score" style="color: #27ae60; font-size: 36px; margin:0;"></h3>
+            </div>
+            <p style="font-size: 18px; color: #555;">感謝你的參與，成績已安全上傳至資料庫。</p>
+            <button class="btn-success" onclick="showScreen('cell-home-screen')" style="margin-top: 20px; padding: 15px 40px; font-size: 18px;">返回儀表板</button>
+        </div>
+    </div>
 
-<div class="container hidden" id="result-screen">
-    <h2>🎉 測驗結束！</h2>
-    <p>成績已安全上傳至雲端</p>
-    <p>你的得分是：</p>
-    <h1 id="score-display">0 / 0</h1>
-    <button onclick="logout()">返回首頁</button>
-</div>
+    <div id="leaderboard-screen" class="screen">
+        <div class="header-bar">
+            <h2>🏆 榮譽排行榜 (Top 10)</h2>
+            <div class="user-info"><a onclick="showScreen('cell-home-screen')">返回</a></div>
+        </div>
+        <table>
+            <thead>
+                <tr><th>排名</th><th>姓名</th><th>所屬小組</th><th>分數</th></tr>
+            </thead>
+            <tbody id="leaderboard-tbody"></tbody>
+        </table>
+    </div>
 
-<div class="container admin-container hidden" id="admin-screen">
-    <h2>📊 雲端測驗成績後台</h2>
-    <button onclick="logout()">登出</button>
-    <button class="btn-danger" onclick="clearRecords()">🗑️ 清除所有記錄 (及解鎖本機)</button>
-    <p id="loading-text" style="color: #007bff; font-weight: bold;"></p>
-    <table>
-        <thead>
-            <tr><th>完成日期</th><th>Cell 帳號</th><th>姓名</th><th>難度</th><th>狀態</th><th>分數</th></tr>
-        </thead>
-        <tbody id="admin-table-body"></tbody>
-    </table>
+    <div id="admin-screen" class="screen">
+        <div class="header-bar" style="background-color: #c0392b;">
+            <h2>⚙️ 系統管理員後台</h2>
+            <div class="user-info"><a onclick="logout()">登出系統</a></div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button onclick="loadAdminRecords()">🔄 重新整理資料</button>
+        </div>
+        <div style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid #ddd;">
+            <table>
+                <thead>
+                    <tr><th>日期時間</th><th>所屬小組</th><th>姓名</th><th>難度</th><th>分數</th><th>狀態</th></tr>
+                </thead>
+                <tbody id="admin-table-body"></tbody> 
+            </table>
+        </div>
+        <div style="text-align: right; margin-top: 30px;">
+            <button class="btn-danger" onclick="clearRecords()">⚠️ 清除所有成績紀錄</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCud2BDeVczN5h_bi9SVF6Bi0A1DX3gPfU",
-        authDomain: "peterbiblereading2026.firebaseapp.com",
-        projectId: "peterbiblereading2026",
-        storageBucket: "peterbiblereading2026.firebasestorage.app",
-        messagingSenderId: "543051702211",
-        appId: "1:543051702211:web:664cd107cc446f5a16a776",
-        measurementId: "G-M7305J8L6J"
-    };
+// 全域變數
+const QUIZ_DEADLINE = new Date("2026-03-21T12:00:00").getTime(); 
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+let pointsPerQuestion = 0; 
+let maxScore = 0; 
+let timerInterval; 
+let timeRemaining = 0;
+let endTime = 0; 
 
-    const questionBank = [
-        { question: "1. 以下哪位是在耶穌的家譜中所提及過的女性？", options: ["撒拉", "米利暗", "路得", "拉結"], answer: 2 },
-        { question: "2. 「以馬內利」翻出來的意思是什麼？", options: ["基督降臨", "神與我們同在", "神的兒子", "以色列的王"], answer: 1 },
-        { question: "3. 當希律王的時候，有幾個博士從東方來尋找猶太人之王，他們的第一站去到了哪裡？", options: ["伯利恆", "拿撤勒", "加利利", "耶路撒冷"], answer: 3 },
-        { question: "4. 聖經是怎麼形容約瑟（馬利亞的丈夫）呢？", options: ["容貌俊美", "有智慧", "義人", "謙卑"], answer: 2 },
-        { question: "5. 約瑟帶著小孩子和馬利亞夜間起來，逃往哪裡去躲避希律？", options: ["拿撒勒", "埃及", "迦南", "大馬士革"], answer: 1 },
-        { question: "6. 希律因受博士愚弄，決定在伯利恆把所有兩歲以下的男孩都殺盡了，這是應驗了哪位先知的話？", options: ["耶利米", "以利亞", "以賽亞", "尼希米"], answer: 0 },
-        { question: "7. 「在_____聽見號咷大哭的聲音，是______哭他兒女，不肯受安慰，因為他們都不在了。」", options: ["拉結、拉班", "拉瑪、拉結", "伯利恆、以色列", "猶太、撒拉"], answer: 1 },
-        { question: "8. 施洗約翰在猶太的曠野傳道時的食物是什麼？", options: ["野果、野蜜", "餅、水", "駱駝、水", "蝗蟲、野蜜"], answer: 3 },
-        { question: "9. 施洗約翰看到法利賽人及撒都該人時，是怎麼去形容他們呢？", options: ["粉飾的墳墓", "毒蛇的種類", "大衛的子孫", "亞伯拉罕的後裔"], answer: 1 },
-        { question: "10. 耶穌受了洗，天為他開了，他看見神的靈降下，彷彿什麼落在身上？", options: ["鴿子", "火焰", "雲彩", "天使"], answer: 0 },
-        { question: "11. 耶穌在曠野禁食了多久，後來就餓了？", options: ["七個晝夜", "三個晝夜", "四十晝夜", "二十晝夜"], answer: 2 },
-        { question: "12. 是誰把耶穌引到曠野受試探呢？", options: ["魔鬼", "施洗約翰", "法利賽人", "聖靈"], answer: 3 },
-        { question: "13. 魔鬼的第一個試探是叫耶穌將什麼變成食物？", options: ["木頭", "泥土", "灰塵", "石頭"], answer: 3 },
-        { question: "14. 請按耶穌在受試探時使用經文的順序排序：(i)當拜主你的神，單要事奉他。(ii)人活著，不是單靠食物，乃是靠神口裡所出的一切話。(iii)不可試探主─你的神。", options: ["i→ii→iii", "ii→i→iii", "ii→iii→i", "i→iii→iii"], answer: 2 },
-        { question: "15. 耶穌呼召西門（彼得）和安得烈時，他們正在做什麼？", options: ["補網", "撒網", "休息", "吃喝"], answer: 1 },
-        { question: "16. 「____的人有福了！因為他們必____。」", options: ["虛心、得見神", "哀慟、得飽足", "憐恤人、得安慰", "清心、得見神"], answer: 3 },
-        { question: "17. 耶穌教導門徒是「世上的光」，這光是不能隱藏的，好比什麼蓋在山上？", options: ["燈塔", "城", "聖殿", "帳幕"], answer: 1 },
-        { question: "18. 耶穌形容門徒是「世上的鹽」，若鹽失了味，應當如何處理？", options: ["用火燒", "打碎扔掉", "丟在外面被人踐踏", "撒在田裡"], answer: 2 },
-        { question: "19. 耶穌說他來是要怎樣對待律法和先知？", options: ["取代", "成全", "改善", "廢掉"], answer: 1 },
-        { question: "20. 凡向弟兄動怒的，難免受審斷；凡罵弟兄是____的，難免公會的審斷；凡罵弟兄是____的，難免地獄的火。", options: ["魔利、拉加", "摩押、拉班", "拉加、魔利", "拉班、摩押"], answer: 2 },
-        { question: "21. 若是你的_____叫你跌倒，就剜出來丟掉，寧可失去百體中的一體，不叫全身下入地獄。", options: ["左眼、左手", "右眼、右手", "左眼、右手", "右眼、左手"], answer: 1 },
-        { question: "22. 「你們的話，是，就說是；不是，就說不是；若再多說，就是出於_____。」", options: ["自我", "無知", "惡意", "那惡者"], answer: 3 },
-        { question: "23. 禁食的時候，應該要做什麼呢？", options: ["披麻蒙灰", "閉門思過", "梳頭洗臉", "大聲哭泣"], answer: 2 },
-        { question: "24. 「你們不要積攢財寶在地上」，因為地上有什麼會損壞？", options: ["蟲咬、鏽壞", "洪水、烈火", "風吹、雨淋", "戰爭、動亂"], answer: 0 },
-        { question: "25. 耶穌說：「所以，不要為明天憂慮，因為明天自有明天的憂慮；一天的____一天當就夠了。」", options: ["工作", "難處", "苦難", "喜樂"], answer: 1 },
-        { question: "26. 「眼睛是____的燈。」", options: ["靈魂", "身體", "生命", "光明"], answer: 1 },
-        { question: "27. 「為什麼看見你弟兄眼中有刺，卻不想自己眼中有____呢？」", options: ["灰塵", "梁木", "石頭", "污泥"], answer: 1 },
-        { question: "28. 耶穌應許說：「你們祈求，就給你們；尋找，就尋見；____，就給你們開門。」", options: ["呼喊", "等候", "叩門", "信靠"], answer: 2 },
-        { question: "29. 「無論何事，你們願意人怎樣待你們，你們也要怎樣待人」，這句話是律法和什麼的總綱？", options: ["誡命", "真理", "智慧", "先知"], answer: 3 },
-        { question: "30. 耶穌說「引到永生的那門是___的，路是___的，找著的也____。」", options: ["寬、大、多", "寬、小、少", "窄、小、多", "窄、小、少"], answer: 3 },
-        { question: "31. 聰明人把房子蓋在什麼上面，即使雨淋、水沖、風吹，房子總不倒塌？", options: ["沙土上", "草地上", "磐石上", "山谷中"], answer: 2 },
-        { question: "32. 眾人聽完耶穌的教訓，都希奇他的教訓，因為他教訓他們正像什麼樣的人？", options: ["文士", "有權柄的人", "平常人", "詩人"], answer: 1 },
-        { question: "33. 耶穌說：「不要把聖物給狗，也不要把你們的____丟在豬前。」", options: ["珍珠", "寶石", "金子", "餅"], answer: 0 }
-    ];
+let currentUserName = ""; 
+let currentUserCell = ""; 
+let selectedDifficultyName = "";
+let userAnswers = []; 
+let currentQuestionIndex = 0; 
+let isQuizActive = false; 
+let selectedQuestions = [];
+let currentDocId = ""; 
+let currentRecordData = null;
 
-    let currentUserCell = ""; let currentUserName = ""; let selectedDifficultyName = "";
-    let selectedQuestions = []; let currentQuestionIndex = 0; 
-    let userAnswers = [];
-    let pointsPerQuestion = 0; let maxScore = 0; let timerInterval; let timeRemaining = 0;
-    let endTime = 0; // 🌟 新增：紀錄絕對交卷時間
-    
-    let isQuizActive = false; 
-    let currentDocId = null; 
+// 題庫 (馬太福音 32 題)
+const questionBank = [
+    { question: "1. 有一位長大痲瘋的來拜耶穌，說：「主若肯，必能叫我____了。」", options: ["痊癒", "康復", "得赦免", "潔淨"], answer: 3 },
+    { question: "2. 有一個百夫長求耶穌醫治他的僕人，他的僕人犯的是什麼病？", options: ["熱病", "大麻瘋", "癱瘓", "癲癇"], answer: 2 },
+    { question: "3. 耶穌在船上睡著了，門徒因風浪大作而驚慌，耶穌醒後斥責他們是什麼樣的人？", options: ["無知的人", "怯懦的人", "膽怯的人", "小信的人"], answer: 3 },
+    { question: "4. 當耶穌把鬼趕入豬群時，耶穌身處在什麼人的地方呢？", options: ["加大拉人", "法利賽人", "加利利人", "撒馬利亞人"], answer: 0 },
+    { question: "5. 耶穌醫治一個癱子時，先對他說了哪句話，讓文士心裡議論他？", options: ["你的病好了", "起來行走吧", "你的罪赦了", "你的信救了你"], answer: 2 },
+    { question: "6. 耶穌經過稅關，看見一個人坐在那裡，就對他說：「你跟從我來。」這個人是誰？", options: ["馬太", "路加", "腓力", "多馬"], answer: 0 },
+    { question: "7. 當法利賽人責難耶穌與罪人一同吃飯時，耶穌說：「經上說：我喜愛___，不喜愛___。」", options: ["謙卑、驕傲", "憐恤、祭祀", "公義、詭詐", "誠實、虛偽"], answer: 1 },
+    { question: "8. 有一個患了十二年血漏的女人，她心裡想只要摸耶穌的什麼，就必痊癒？", options: ["手掌", "腳", "衣裳", "頭"], answer: 2 },
+    { question: "9. 當耶穌差遣十二使徒，給他們權柄，能趕逐污鬼，並醫治各樣的病症時，名單中排在第一位的是誰？", options: ["雅各", "約翰", "西門彼得", "安得烈"], answer: 2 },
+    { question: "10. 耶穌差遣使徒時，吩咐他們：「你們白白的得來，也要白白的_____。」", options: ["傳揚", "捨去", "給予", "奉獻"], answer: 1 },
+    { question: "11. 耶穌教導門徒要靈巧像_____，馴良像_____。", options: ["鴿子、蛇", "蛇、鴿子", "猴、羊", "狐狸、牛"], answer: 1 },
+    { question: "12. 耶穌說：「那殺身體、不能殺靈魂的，不要怕他們；惟有能把身體和靈魂都滅在_____裡的，正要怕他。」", options: ["陰間", "曠野", "地獄", "深淵"], answer: 2 },
+    { question: "13. 「不背著他的_____跟從我的，也不配作我的門徒。」", options: ["軛", "十字架", "擔子", "憂愁"], answer: 1 },
+    { question: "14. 施洗約翰在監獄裡聽見基督所作的事，就打發門徒去問耶穌什麼？", options: ["天國幾時來到", "如何才能成為真門徒", "那將要來的是你嗎", "誰是天國最大的"], answer: 2 },
+    { question: "15. 耶穌說：「看哪，我的母親，我的弟兄。凡遵行我天父旨意的人，就是我的弟兄姊妹和母親了。」的時候，他是伸手指著什麼人呢？", options: ["百夫長", "撒馬利亞人", "聽道的人", "門徒"], answer: 3 },
+    { question: "16. 當審判的時候，是誰要起來定這世代的罪，因為他從地極而來，要聽所羅門的智慧話呢？", options: ["所多瑪", "尼尼微人", "南方的女王", "門徒"], answer: 2 },
+    { question: "17. 「他代替我們的軟弱，擔當我們的疾病。」這是應驗了哪位先知的話？", options: ["以利亞", "以賽亞", "耶利米", "撒母耳"], answer: 1 },
+    { question: "18. 耶穌說：「我心裡____，你們當負我的軛，學我的樣式。」", options: ["苦悶憂愁", "柔和謙卑", "平安喜樂", "亳不懼怕"], answer: 1 },
+    { question: "19. 耶穌在安息日進了會堂，醫治了一個什麼樣的人，引起法利賽人商議要除滅耶穌？", options: ["瞎眼的", "一隻手枯乾了的", "耳聾的", "長大痲瘋的"], answer: 1 },
+    { question: "20. 耶穌說：「凡說話干犯人子的，還可以赦免；惟獨說話干犯_____的，今世來世總不得赦免。」", options: ["聖父", "聖靈", "先知", "天使"], answer: 1 },
+    { question: "21. 耶穌說，除了先知_____的預兆以外，再沒有預兆給這世代看了。", options: ["以賽亞", "耶利米", "以利亞", "約拿"], answer: 3 },
+    { question: "22. 耶穌父親約瑟的職業是什麼？", options: ["漁夫", "石匠", "牧羊人", "木匠"], answer: 3 },
+    { question: "23. 在撒種的比喻中，那些落在土淺石頭地上的，發苗最快，但因為沒有什麼，日頭一出來就曬焦了？", options: ["肥料", "根", "水分", "蔭蔽"], answer: 1 },
+    { question: "24. 在稗子的比喻中，那撒好種的就是人子，田地就是世界，那麼稗子是誰之子？", options: ["惡者", "閒雜人", "愚昧人", "仇敵"], answer: 0 },
+    { question: "25. 天國好像一粒_____，有人拿去種在田裡，後來長起來比各樣的菜都大，成了樹。", options: ["麥子", "芝麻", "芥菜種", "葵花子"], answer: 2 },
+    { question: "26. 分封的王希律因為在生日宴會上許了願，最後在監裡斬了誰？", options: ["彼得", "雅各", "施洗約翰", "司提反"], answer: 2 },
+    { question: "27. 耶穌憐憫曠野的眾人，用五個餅、兩條魚餵飽了五千人（不計婦女孩子），剩下的零碎裝滿了幾個籃子？", options: ["七個", "十個", "十二個", "三個"], answer: 2 },
+    { question: "28. 耶穌在海面上行走，哪位門徒也要求在水面上走過去找耶穌？", options: ["約翰", "彼得", "雅各", "安得烈"], answer: 1 },
+    { question: "29. 當希律聽到耶穌的名聲時，他對臣僕說耶穌是因誰的原因而能發出異能呢？", options: ["施洗約翰", "以利亞", "摩西", "耶利米"], answer: 0 },
+    { question: "30. 耶穌在海面上行走，請問那是發生在夜里什麼時間呢？", options: ["五更天", "四更天", "三更天", "二更天"], answer: 1 },
+    { question: "31. 在撒種的比喻中，當種子落在好土中結實，「有____倍的，____倍的，____倍的。」", options: ["九十、六十、三十", "八十、四十、二十", "九十、五十、二十", "一百、六十、三十"], answer: 3 },
+    { question: "32. 是誰稱耶穌是憑著鬼王別西卜趕鬼的？", options: ["文士", "祭司", "撒都該人", "法利賽人"], answer: 3 }
+];
 
-    // 防誤關警告
-    window.addEventListener('beforeunload', function (e) {
-        if (isQuizActive) { e.preventDefault(); e.returnValue = ''; }
+// 工具函數
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
     });
-    
-    // 如果用家夾硬閂網頁，最後一刻再 Update 一次分數上 Firebase
-    window.addEventListener('pagehide', function() {
-        if (isQuizActive && currentDocId) {
-            const finalCalculatedScore = calculateFinalScore();
-            db.collection("quizRecords").doc(currentDocId).update({
-                score: `${finalCalculatedScore} / ${maxScore}`,
-                numericScore: finalCalculatedScore
-            });
-        }
-    });
+    document.getElementById(screenId).classList.add('active');
+}
 
-    function showScreen(screenId) {
-        document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-        document.getElementById(screenId).classList.remove('hidden');
+function shuffleArray(array) {
+    let newArr = [...array];
+    for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
     }
+    return newArr;
+}
 
-    function login() {
-        const user = document.getElementById('username').value.trim();
-        const pass = document.getElementById('password').value;
-        
-        // 情況 1：管理員帳號
-        if (user === "manager101") {
-            if (pass === "admin101") {
-                showScreen('admin-screen'); 
-                loadAdminRecords();
+// 登入與身份驗證
+function login() {
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value;
+    
+    if (user === "manager101" && pass === "admin101") {
+        showScreen('admin-screen'); 
+        loadAdminRecords();
+    } else if ((user === "Sapling" || user === "Devotion") && pass === "Peter2026") {
+        currentUserCell = user; 
+        document.getElementById('display-cell').innerText = user;
+        document.getElementById('user-real-name').value = "";
+        showScreen('cell-home-screen');
+    } else {
+        alert("帳號或密碼錯誤！");
+    }
+}
+
+function logout() {
+    currentUserCell = "";
+    currentUserName = "";
+    document.getElementById('username').value = "";
+    document.getElementById('password').value = "";
+    showScreen('login-screen');
+}
+
+async function submitName() {
+    const nameInput = document.getElementById('user-real-name').value.trim();
+    if (!nameInput) { alert("請輸入真實姓名！"); return; }
+    
+    const normalizedName = nameInput.toLowerCase();
+    const btn = document.getElementById('submit-name-btn');
+    btn.innerText = "驗證中..."; btn.disabled = true;
+
+    try {
+        const snapshot = await db.collection("quizRecords").where("normalizedName", "==", normalizedName).get();
+
+        if (!snapshot.empty) {
+            currentRecordData = snapshot.docs[0].data();
+            const scoreText = `${currentRecordData.score} (難度: ${currentRecordData.difficulty})`;
+            
+            document.getElementById('personal-score-display').innerText = scoreText;
+            document.getElementById('personal-status-display').innerText = `紀錄狀態: ${currentRecordData.status}`;
+            
+            let reviewContainer = document.getElementById('review-btn-container');
+            if (Date.now() > QUIZ_DEADLINE) {
+                reviewContainer.innerHTML = `<button onclick='reviewPastQuiz()' class='btn-success' style='padding:12px 20px; font-size:16px; width:100%; margin-top:10px;'>📖 查閱我的答題紀錄</button>`;
             } else {
-                alert("管理員密碼錯誤！");
+                reviewContainer.innerHTML = `<p style="color:#666; font-size:15px; margin-top:15px; padding:15px; background:#e8f4f8; border-radius:8px;">⏳ (測驗將於 21號正午 12:00 截止，屆時可在此查閱正確答案)</p>`;
             }
-        // 情況 2：一般使用者帳號 (Sapling 或 Devotion)
-        } else if (user === "Sapling" || user === "Devotion") {
-            if (pass === "Peter2026") {
-                currentUserCell = user; 
-                document.getElementById('display-cell').innerText = user;
-                showScreen('menu-screen');
-            } else {
-                alert("密碼錯誤！");
-            }
-        // 情況 3：亂打帳號
+
+            showScreen('personal-score-screen');
         } else {
-            alert("帳號不存在！");
+            currentUserName = nameInput; 
+            document.getElementById('display-name').innerText = currentUserName;
+            document.getElementById('welcome-name').innerText = currentUserName;
+            showScreen('setup-screen');
+        }
+    } catch (error) { 
+        alert("連線失敗，請檢查網路連線。"); 
+        console.error(error);
+    } finally { 
+        btn.innerText = "驗證身分並開始"; btn.disabled = false; 
+    }
+}
+
+function reviewPastQuiz() {
+    if (!currentRecordData || !currentRecordData.savedQuestions) {
+        alert("找不到詳細的答題紀錄！");
+        return;
+    }
+
+    let html = `<div class="header-bar"><h2>📖 ${currentRecordData.name} 的答題紀錄</h2><div class="user-info"><a onclick="showScreen('personal-score-screen')">返回</a></div></div>`;
+    html += `<div style="text-align:left; max-height: 70vh; overflow-y: auto; padding: 20px; background: white; border-radius: 8px; border: 1px solid #ddd;">`;
+
+    currentRecordData.savedQuestions.forEach((q, index) => {
+        const userAnswerIndex = currentRecordData.savedAnswers[index];
+        const isCorrect = userAnswerIndex === q.answer;
+        const color = isCorrect ? "green" : "red";
+        const icon = isCorrect ? "✅" : "❌";
+        
+        const userAnswerText = userAnswerIndex !== null ? q.options[userAnswerIndex] : "未作答";
+        const correctAnswerText = q.options[q.answer];
+
+        html += `<div style="margin-bottom: 25px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fdfdfd;">
+            <p style="margin-top:0; font-weight:bold; color: #2c3e50; font-size:18px;">${q.question}</p>
+            <p style="color: ${color}; margin: 10px 0; font-size:16px;">${icon} 你的答案: <strong>${userAnswerText}</strong></p>`;
+
+        if (!isCorrect) {
+            html += `<p style="color: #27ae60; margin: 10px 0; font-size:16px; background: #e8f5e9; padding: 12px; border-radius: 6px;">💡 正確答案: <strong>${correctAnswerText}</strong></p>`;
+        }
+        html += `</div>`;
+    });
+
+    html += `</div><div style="text-align:center; margin-top:20px;"><button class="btn-secondary" onclick="showScreen('personal-score-screen')" style="width:200px;">返回上一頁</button></div>`;
+
+    let reviewScreen = document.getElementById('review-answer-screen');
+    if (!reviewScreen) {
+        reviewScreen = document.createElement('div');
+        reviewScreen.id = 'review-answer-screen';
+        reviewScreen.className = 'screen';
+        document.querySelector('.app-container').appendChild(reviewScreen);
+    }
+    
+    reviewScreen.innerHTML = html;
+    showScreen('review-answer-screen');
+}
+
+// 測驗核心功能
+async function startQuiz(minutes, points, max, difficultyName, btnElement) {
+    if (Date.now() > QUIZ_DEADLINE) {
+        alert("⏳ 測驗已經於 21號 正午 12:00 截止，無法再開始測驗！");
+        return;
+    }
+
+    const originalText = btnElement.innerText;
+    btnElement.innerText = "建立試卷中..."; btnElement.disabled = true;
+    
+    pointsPerQuestion = points; 
+    maxScore = max; 
+    selectedDifficultyName = difficultyName;
+    userAnswers = new Array(10).fill(null); 
+    currentQuestionIndex = 0;
+    
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const normalizedName = currentUserName.toLowerCase();
+
+    try {
+        const docRef = await db.collection("quizRecords").add({
+            date: formattedDate,
+            cell: currentUserCell,
+            name: currentUserName,
+            normalizedName: normalizedName,
+            difficulty: selectedDifficultyName,
+            score: `0 / ${maxScore}`,
+            numericScore: 0, 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            status: "⚠️ 意外退出/中途關閉"
+        });
+        currentDocId = docRef.id; 
+    } catch (error) {
+        alert("資料庫連線失敗。");
+        btnElement.innerText = originalText; btnElement.disabled = false;
+        return;
+    }
+    
+    btnElement.innerText = originalText; btnElement.disabled = false;
+    isQuizActive = true; 
+    
+    showScreen('quiz-screen');
+    document.getElementById('score-info').innerText = `每題 ${pointsPerQuestion} 分`;
+    
+    selectedQuestions = shuffleArray(questionBank).slice(0, 10);
+    buildNavGrid(); 
+    
+    endTime = Date.now() + (minutes * 60 * 1000); 
+    timerInterval = setInterval(countdown, 1000);
+    countdown(); 
+    loadQuestion();
+}
+
+function countdown() {
+    timeRemaining = Math.floor((endTime - Date.now()) / 1000);
+    
+    if (timeRemaining <= 0) {
+        timeRemaining = 0;
+        updateTimerDisplay();
+        endQuiz("⏰ 時間到自動交卷"); 
+    } else {
+        updateTimerDisplay();
+    }
+}
+
+function updateTimerDisplay() {
+    const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+    const s = (timeRemaining % 60).toString().padStart(2, '0');
+    const timerElement = document.getElementById('timer');
+    const timerBar = document.getElementById('timer-bar-container');
+    
+    timerElement.innerText = `⏳ 剩餘時間: ${m}:${s}`;
+    
+    if (timeRemaining <= 60) {
+        timerBar.classList.add('danger');
+    } else {
+        timerBar.classList.remove('danger');
+    }
+}
+
+function loadQuestion() {
+    const q = selectedQuestions[currentQuestionIndex];
+    document.getElementById('question-number').innerText = `第 ${currentQuestionIndex + 1} 題 / 共 10 題`;
+    document.getElementById('question-text').innerText = q.question;
+    
+    const optionsDiv = document.getElementById('options');
+    optionsDiv.innerHTML = '';
+    
+    q.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.innerText = opt;
+        btn.onclick = () => selectOption(index);
+        if (userAnswers[currentQuestionIndex] === index) {
+            btn.classList.add('selected');
+        }
+        optionsDiv.appendChild(btn);
+    });
+    
+    updateNavGrid();
+}
+
+function selectOption(index) {
+    userAnswers[currentQuestionIndex] = index;
+    loadQuestion(); 
+}
+
+function nextQuestion() {
+    if (currentQuestionIndex < selectedQuestions.length - 1) {
+        currentQuestionIndex++;
+        loadQuestion();
+    }
+}
+
+function prevQuestion() {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion();
+    }
+}
+
+function jumpToQuestion(index) {
+    currentQuestionIndex = index;
+    loadQuestion();
+}
+
+function buildNavGrid() {
+    const grid = document.getElementById('nav-grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 10; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i + 1;
+        btn.onclick = () => jumpToQuestion(i);
+        grid.appendChild(btn);
+    }
+}
+
+function updateNavGrid() {
+    const grid = document.getElementById('nav-grid');
+    const buttons = grid.getElementsByTagName('button');
+    for (let i = 0; i < 10; i++) {
+        buttons[i].className = '';
+        if (i === currentQuestionIndex) {
+            buttons[i].classList.add('current');
+        } else if (userAnswers[i] !== null) {
+            buttons[i].classList.add('answered');
         }
     }
+}
 
-    function showNameScreen() { document.getElementById('user-real-name').value = ''; showScreen('name-screen'); }
-    function goBackToMenu() { showScreen('menu-screen'); }
-
-    // 🌟 雙重防護：驗證姓名
-    async function submitName() {
-        const nameInput = document.getElementById('user-real-name').value.trim();
-        if (!nameInput) { alert("請輸入真實姓名！"); return; }
-        
-        // 將名轉做全細楷，防止大細楷走漏洞 (Peter vs peter)
-        const normalizedName = nameInput.toLowerCase();
-        const btn = document.getElementById('submit-name-btn');
-        btn.innerText = "驗證中..."; btn.disabled = true;
-
-        try {
-            // 防護 1：檢查 Firebase 雲端紀錄
-            const snapshot = await db.collection("quizRecords").where("normalizedName", "==", normalizedName).get();
-            
-            // 防護 2：檢查瀏覽器 LocalStorage 鎖定紀錄
-            const localLock = localStorage.getItem("quiz_locked_" + normalizedName);
-
-            if (!snapshot.empty || localLock === "true") {
-                let scoreText = "未知";
-                let statusText = "⚠️ 意外退出/中途關閉";
-                
-                // 如果搵到雲端紀錄，就顯示出嚟
-                if (!snapshot.empty) {
-                    const recordData = snapshot.docs[0].data();
-                    scoreText = `${recordData.score} (難度: ${recordData.difficulty})`;
-                    statusText = recordData.status;
-                }
-
-                document.getElementById('personal-score-display').innerText = scoreText;
-                document.getElementById('personal-status-display').innerText = `記錄狀態: ${statusText}`;
-                showScreen('personal-score-screen');
-            } else {
-                currentUserName = nameInput; 
-                document.getElementById('display-name').innerText = currentUserName;
-                showScreen('setup-screen');
-            }
-        } catch (error) { alert("連線失敗，請檢查網絡。"); } 
-        finally { btn.innerText = "驗證並下一步"; btn.disabled = false; }
-    }
-
-    async function showLeaderboard() {
-        showScreen('leaderboard-screen');
-        const list = document.getElementById('top5-list'); list.innerHTML = "<li>載入中...</li>";
-        try {
-            const snapshot = await db.collection("quizRecords").orderBy("numericScore", "desc").limit(5).get();
-            list.innerHTML = "";
-            if (snapshot.empty) { list.innerHTML = "<li>暫無記錄。</li>"; return; }
-            let rank = 1; const medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"];
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                list.innerHTML += `<li>${medals[rank-1]} ${data.name} <span style="color:#007bff; float:right;">${data.score}</span></li>`;
-                rank++;
-            });
-        } catch (error) { list.innerHTML = "<li>載入失敗，可能需建立索引。</li>"; }
-    }
-
-    function shuffleArray(array) {
-        let shuffled = array.slice();
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+// 交卷與成績計算
+async function endQuiz(statusMessage = "✅ 正常交卷") {
+    if (!isQuizActive) return; 
+    
+    if (statusMessage === "✅ 正常交卷") {
+        const unansweredCount = userAnswers.filter(a => a === null).length;
+        if (unansweredCount > 0) {
+            const confirmSubmit = confirm(`你還有 ${unansweredCount} 題未作答，確定要交卷嗎？`);
+            if (!confirmSubmit) return;
         }
-        return shuffled;
+    }
+    
+    isQuizActive = false; 
+    clearInterval(timerInterval);
+    
+    let score = 0;
+    userAnswers.forEach((answer, index) => {
+        if (answer === selectedQuestions[index].answer) {
+            score += pointsPerQuestion;
+        }
+    });
+
+    // 防止浮點數計算誤差或分數異常
+    if (score > maxScore) {
+        score = maxScore;
     }
 
-    // 🌟 雙重防護：建立先入為主紀錄
-    async function startQuiz(minutes, points, max, difficultyName, btnElement) {
-        const originalText = btnElement.innerText;
-        btnElement.innerText = "建立試卷中..."; btnElement.disabled = true;
-        
-        pointsPerQuestion = points; maxScore = max; selectedDifficultyName = difficultyName;
-        userAnswers = new Array(10).fill(null); 
-        currentQuestionIndex = 0;
-        
-        const now = new Date();
-        const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        const normalizedName = currentUserName.toLowerCase();
+    try {
+        await db.collection("quizRecords").doc(currentDocId).update({
+            score: `${score} / ${maxScore}`,
+            numericScore: score,
+            status: statusMessage,
+            savedQuestions: selectedQuestions,
+            savedAnswers: userAnswers,
+            completionTime: Date.now() 
+        });
+    } catch (error) {
+        console.error("更新成績失敗", error);
+    }
+    
+    document.getElementById('final-score').innerText = `得分: ${score} / ${maxScore}`;
+    showScreen('result-screen');
+}
 
-        try {
-            // 寫入雲端防護鎖
-            const docRef = await db.collection("quizRecords").add({
-                date: formattedDate,
-                cell: currentUserCell,
-                name: currentUserName,
-                normalizedName: normalizedName, // 儲存細楷名作配對
-                difficulty: selectedDifficultyName,
-                score: `0 / ${maxScore}`,
-                numericScore: 0, 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                status: "⚠️ 意外退出/中途關閉"
-            });
-            currentDocId = docRef.id; 
-            
-            // 寫入本機瀏覽器防護鎖
-            localStorage.setItem("quiz_locked_" + normalizedName, "true");
-            
-        } catch (error) {
-            alert("連接伺服器失敗，請檢查網絡連線。");
-            btnElement.innerText = originalText; btnElement.disabled = false;
+window.addEventListener('beforeunload', function (e) {
+    if (isQuizActive) {
+        e.preventDefault();
+        e.returnValue = ''; 
+    }
+});
+
+// 排行榜與管理員
+function loadLeaderboard() {
+    const tbody = document.getElementById('leaderboard-tbody');
+    if (!tbody) return; 
+
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">載入中...</td></tr>';
+
+    db.collection("quizRecords").get().then((querySnapshot) => {
+        let records = [];
+        querySnapshot.forEach((doc) => {
+            records.push(doc.data());
+        });
+
+        records.sort((a, b) => {
+            if (b.numericScore !== a.numericScore) return b.numericScore - a.numericScore; 
+            const timeA = a.completionTime || Infinity;
+            const timeB = b.completionTime || Infinity;
+            return timeA - timeB; 
+        });
+
+        const top10 = records.slice(0, 10);
+        tbody.innerHTML = '';
+        
+        if (top10.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">暫無測驗記錄</td></tr>';
+            return;
+        }
+
+        top10.forEach((data, index) => {
+            const tr = document.createElement('tr');
+            let rankDisplay = index + 1;
+            if (index === 0) rankDisplay = '🥇';
+            else if (index === 1) rankDisplay = '🥈';
+            else if (index === 2) rankDisplay = '🥉';
+
+            tr.innerHTML = `
+                <td style="text-align:center; font-size:20px;">${rankDisplay}</td>
+                <td style="font-weight: bold;">${data.name}</td>
+                <td>${data.cell || '-'}</td>
+                <td style="text-align:center; font-weight:bold; color: #e74c3c; font-size: 18px;">${data.score}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }).catch(error => { console.error("載入排行榜失敗", error); });
+}
+
+function loadAdminRecords() {
+    const tbody = document.getElementById('admin-table-body');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">載入中...</td></tr>';
+    
+    db.collection("quizRecords").get().then((querySnapshot) => {
+        let records = [];
+        querySnapshot.forEach((doc) => { records.push(doc.data()); });
+
+        records.sort((a, b) => {
+            if (b.numericScore !== a.numericScore) return b.numericScore - a.numericScore; 
+            return (a.completionTime || Infinity) - (b.completionTime || Infinity); 
+        });
+
+        tbody.innerHTML = '';
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">無記錄</td></tr>';
             return;
         }
         
-        btnElement.innerText = originalText; btnElement.disabled = false;
-        isQuizActive = true; 
-        
-        showScreen('quiz-screen');
-        document.getElementById('score-info').innerText = `每題 ${pointsPerQuestion} 分`;
-        selectedQuestions = shuffleArray(questionBank).slice(0, 10);
-        buildNavGrid(); 
-        // 🌟 新寫法：鎖定現實世界嘅「絕對結束時間」
-        endTime = Date.now() + (minutes * 60 * 1000); 
-        timerInterval = setInterval(countdown, 1000);
-        countdown(); // 即刻執行一次，避免第一秒延遲
-        loadQuestion();
-    }
-
-    function buildNavGrid() {
-        const navContainer = document.getElementById('question-nav');
-        navContainer.innerHTML = '';
-        for (let i = 0; i < 10; i++) {
-            const btn = document.createElement('button');
-            btn.className = 'q-nav-btn'; btn.innerText = i + 1;
-            btn.onclick = () => jumpToQuestion(i);
-            navContainer.appendChild(btn);
-        }
-    }
-
-    function updateNavGridUI() {
-        const navBtns = document.querySelectorAll('.q-nav-btn');
-        navBtns.forEach((btn, index) => {
-            btn.classList.remove('active');
-            if (userAnswers[index] !== null) btn.classList.add('answered'); 
-            if (index === currentQuestionIndex) btn.classList.add('active'); 
+        records.forEach((data) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${data.date || 'N/A'}</td>
+                <td>${data.cell || 'N/A'}</td>
+                <td>${data.name || 'N/A'}</td>
+                <td>${data.difficulty || 'N/A'}</td>
+                <td style="font-weight:bold; color: #2980b9;">${data.score || '0'}</td>
+                <td>${data.status || 'N/A'}</td>
+            `;
+            tbody.appendChild(tr);
         });
-    }
+    });
+}
 
-    function jumpToQuestion(index) { currentQuestionIndex = index; loadQuestion(); }
-    function prevQuestion() { if (currentQuestionIndex > 0) { currentQuestionIndex--; loadQuestion(); } }
-    function nextQuestion() { if (currentQuestionIndex < 9) { currentQuestionIndex++; loadQuestion(); } }
-
-    function countdown() {
-        // 🌟 核心破解：用「結束時間」減去「當下現實時間」
-        timeRemaining = Math.floor((endTime - Date.now()) / 1000);
-        
-        if (timeRemaining <= 0) {
-            timeRemaining = 0;
-            updateTimerDisplay();
-            endQuiz("⏰ 時間到自動交卷"); 
-        } else {
-            updateTimerDisplay();
-        }
-    }
-    function updateTimerDisplay() {
-        let minutes = Math.floor(timeRemaining / 60); let seconds = timeRemaining % 60;
-        document.getElementById('time-left').innerText = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    }
-
-    function loadQuestion() {
-        updateNavGridUI();
-        const currentQ = selectedQuestions[currentQuestionIndex];
-        document.getElementById('current-q-num').innerText = currentQuestionIndex + 1;
-        document.getElementById('question-text').innerText = currentQ.question;
-        
-        const optionsContainer = document.getElementById('options-container');
-        optionsContainer.innerHTML = '';
-        
-        currentQ.options.forEach((opt, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn'; 
-            if (userAnswers[currentQuestionIndex] === index) btn.classList.add('selected'); 
-            btn.innerText = opt;
-            btn.onclick = () => selectAnswer(index);
-            optionsContainer.appendChild(btn);
-        });
-    }
-
-    // 🌟 答完即刻 Update 雲端分數
-    function selectAnswer(selectedIndex) {
-        userAnswers[currentQuestionIndex] = selectedIndex; 
-        loadQuestion(); 
-        
-        if (currentDocId) {
-            const currentScore = calculateFinalScore();
-            db.collection("quizRecords").doc(currentDocId).update({
-                score: `${currentScore} / ${maxScore}`,
-                numericScore: currentScore
-            }).catch(err => console.log("Background sync delayed"));
-        }
-        
-        if (currentQuestionIndex < 9) { setTimeout(() => { nextQuestion(); }, 300); }
-    }
-
-    function calculateFinalScore() {
-        let finalScore = 0;
-        for (let i = 0; i < 10; i++) {
-            if (userAnswers[i] !== null && userAnswers[i] === selectedQuestions[i].answer) {
-                finalScore += pointsPerQuestion;
-            }
-        }
-        return finalScore;
-    }
-
-    function submitQuizEarly() {
-        const unansweredCount = userAnswers.filter(ans => ans === null).length;
-        let confirmMsg = "確定要交卷嗎？";
-        if (unansweredCount > 0) confirmMsg = `你仲有 ${unansweredCount} 題未答！確定要提早交卷？未答的題目將作零分計算。`;
-        
-        if (confirm(confirmMsg)) { endQuiz("✅ 正常交卷"); }
-    }
-
-    function endQuiz(statusMsg = "✅ 正常交卷") {
-        isQuizActive = false; 
-        clearInterval(timerInterval);
-        
-        const finalCalculatedScore = calculateFinalScore();
-        showScreen('result-screen');
-        
-        const finalScoreText = `${finalCalculatedScore} / ${maxScore}`;
-        document.getElementById('score-display').innerText = "上傳中...";
-
-        if (currentDocId) {
-            db.collection("quizRecords").doc(currentDocId).update({
-                score: finalScoreText,
-                numericScore: finalCalculatedScore, 
-                status: statusMsg
-            }).then(() => {
-                document.getElementById('score-display').innerText = finalScoreText;
-            }).catch(() => {
-                document.getElementById('score-display').innerText = finalScoreText;
-            });
-        }
-    }
-
-    function loadAdminRecords() {
+function clearRecords() {
+    if(confirm("⚠️ 警告：確定清除所有測驗記錄？此操作無法復原！")) {
         const tbody = document.getElementById('admin-table-body');
-        const loadingText = document.getElementById('loading-text');
-        tbody.innerHTML = ''; loadingText.innerText = "資料載入中...";
-
-        db.collection("quizRecords").orderBy("timestamp", "desc").get().then((querySnapshot) => {
-            loadingText.innerText = "";
-            if (querySnapshot.empty) { tbody.innerHTML = '<tr><td colspan="6">暫無記錄</td></tr>'; return; }
-            querySnapshot.forEach((doc) => {
-                const record = doc.data();
-                tbody.innerHTML += `<tr><td>${record.date || '未知'}</td><td>${record.cell}</td><td>${record.name}</td><td>${record.difficulty}</td><td style="font-size:12px;">${record.status || '✅ 正常交卷'}</td><td style="font-weight:bold; color:#007bff;">${record.score}</td></tr>`;
-            });
-        }).catch(() => { loadingText.innerText = "載入失敗！"; });
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">資料清除中...</td></tr>';
+        
+        db.collection("quizRecords").get().then((querySnapshot) => {
+            const batch = db.batch();
+            querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
+            return batch.commit();
+        }).then(() => { 
+            alert("✅ 已成功清除所有雲端成績！"); 
+            loadAdminRecords(); 
+        });
     }
-
-    function clearRecords() {
-        if(confirm("確定清除所有記錄？無法復原！這會同時清除本機鎖定。")) {
-            const loadingText = document.getElementById('loading-text'); loadingText.innerText = "清除中...";
-            db.collection("quizRecords").get().then((querySnapshot) => {
-                const batch = db.batch();
-                querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
-                return batch.commit();
-            }).then(() => { 
-                localStorage.clear(); // 管理員清除記錄時，順便幫自己部機解鎖
-                alert("已成功清除！"); loadAdminRecords(); 
-            })
-            .catch(() => { alert("清除失敗！"); });
-        }
-    }
-
-    function logout() {
-        document.getElementById('username').value = ''; document.getElementById('password').value = ''; document.getElementById('user-real-name').value = '';
-        currentUserCell = ""; currentUserName = ""; showScreen('login-screen');
-    }
+}
 </script>
 
 </body>
