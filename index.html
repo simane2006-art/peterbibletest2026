@@ -3,157 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬太福音問答比賽 (桌面版)</title>
-    
-    <style>
-        body {
-            font-family: 'Segoe UI', 'Microsoft JhengHei', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #eef2f5;
-            margin: 0;
-            padding: 40px 20px; /* 增加上下邊距，適合電腦螢幕 */
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        /* 桌面版主要容器，加寬至 800px */
-        .app-container {
-            background: white;
-            width: 100%;
-            max-width: 800px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .screen { display: none; padding: 40px; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* 頂部導航列設計 */
-        .header-bar {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: -40px -40px 30px -40px; /* 貼齊邊緣 */
-        }
-        .header-bar h2 { margin: 0; font-size: 22px; color: white; text-align: left; }
-        .header-bar .user-info { font-size: 14px; opacity: 0.9; }
-        .header-bar a { color: #ecf0f1; text-decoration: underline; cursor: pointer; margin-left: 15px; }
-        .header-bar a:hover { color: #fff; }
-
-        h2 { color: #2c3e50; text-align: center; margin-top: 0; margin-bottom: 25px;}
-        h3 { color: #34495e; }
-        
-        /* 表單元素 */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        
-        input {
-            width: 100%;
-            padding: 14px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            background-color: #fcfcfc;
-            transition: border-color 0.3s;
-        }
-        input:focus { outline: none; border-color: #3498db; background-color: #fff; }
-        
-        button {
-            background-color: #3498db;
-            color: white;
-            padding: 14px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        button:hover { background-color: #2980b9; transform: translateY(-1px); }
-        button:disabled { background-color: #95a5a6; cursor: not-allowed; transform: none; }
-        .btn-block { width: 100%; }
-        .btn-secondary { background-color: #7f8c8d; }
-        .btn-secondary:hover { background-color: #636e72; }
-        .btn-danger { background-color: #e74c3c; }
-        .btn-danger:hover { background-color: #c0392b; }
-        .btn-success { background-color: #2ecc71; }
-        .btn-success:hover { background-color: #27ae60; }
-        
-        /* 雙欄卡片設計 (儀表板用) */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-        .card {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 25px;
-        }
-
-        /* 測驗專用樣式 */
-        .quiz-container { display: flex; flex-direction: column; gap: 20px; }
-        
-        #options { display: grid; gap: 12px; }
-        #options button {
-            background-color: #f8f9fa;
-            color: #333;
-            text-align: left;
-            border: 2px solid #e2e8f0;
-            font-weight: normal;
-            font-size: 18px; /* 電腦版字體加大 */
-            padding: 16px 20px;
-        }
-        #options button:hover { background-color: #eef2f5; border-color: #cbd5e1; }
-        #options button.selected { background-color: #3498db; color: white; border-color: #3498db; }
-        
-        .timer-bar { 
-            display: flex; justify-content: space-between; 
-            font-size: 18px; font-weight: bold; 
-            padding: 15px 20px; background: #fff3cd; border-radius: 8px; color: #856404;
-            margin-bottom: 20px;
-        }
-        .timer-bar.danger { background: #f8d7da; color: #721c24; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-        
-        /* 導航數字按鈕 */
-        .nav-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px; }
-        #nav-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-        #nav-grid button { 
-            width: 45px; height: 45px; padding: 0; font-size: 16px; 
-            border-radius: 6px; background: #e2e8f0; color: #475569; 
-            font-weight: normal; border: 2px solid transparent;
-        }
-        #nav-grid button:hover { background: #cbd5e1; }
-        #nav-grid button.answered { background: #2ecc71; color: white; }
-        #nav-grid button.current { border-color: #2c3e50; font-weight: bold; transform: scale(1.05); }
-        
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 16px; background: white; }
-        th, td { border: 1px solid #dee2e6; padding: 12px 15px; text-align: center; }
-        th { background-color: #f1f3f5; color: #495057; }
-        
-        /* 登入區塊置中變窄 */
-        .login-box { max-width: 400px; margin: 0 auto; }
-
-        @media (max-width: 600px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .header-bar { flex-direction: column; gap: 10px; text-align: center; }
-        }
-    </style>
+    <title>馬太福音問答比賽</title>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
 
     <script>
         // Firebase 設定
@@ -173,181 +26,299 @@
         const db = firebase.firestore();
         const analytics = firebase.analytics();
     </script>
+
+    <style>
+        /* ================= 核心 UI 樣式 (高度還原你的截圖) ================= */
+        :root {
+            --primary-blue: #5c76cc; /* 截圖中的按鈕藍色 */
+            --dark-blue: #3b4b61;    /* 截圖中的頂部深藍色 */
+            --success-green: #5cb85c;
+            --warning-yellow: #f0ad4e;
+            --danger-red: #d9534f;
+            --bg-color: #ffffff;
+            --text-dark: #333;
+            --text-muted: #777;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* 頂部導覽列 */
+        .top-navbar {
+            background-color: var(--dark-blue);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-navbar h2 { margin: 0; font-size: 18px; font-weight: normal; }
+        .top-navbar .nav-right { font-size: 14px; }
+        .top-navbar .nav-right span { color: #f0ad4e; font-weight: bold; margin: 0 5px; }
+        .top-navbar .nav-right a { color: white; text-decoration: none; cursor: pointer; margin-left: 10px; }
+        .top-navbar .nav-right a:hover { text-decoration: underline; }
+
+        /* 容器與卡片 */
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .card {
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 30px;
+            border: 1px solid #eaeaea;
+        }
+
+        /* 儀表板排版 */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .dashboard-grid .card h3 { color: #444; font-size: 18px; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+
+        /* 登入畫面 */
+        .login-wrapper { max-width: 400px; margin: 80px auto; text-align: center; }
+        .login-title { color: var(--dark-blue); font-size: 22px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* 表單與按鈕 */
+        input[type="text"], input[type="password"] {
+            width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 20px;
+            border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+            font-size: 15px; color: #555;
+        }
+        input:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 5px rgba(92, 118, 204, 0.3); }
+        
+        button { font-family: inherit; cursor: pointer; transition: opacity 0.2s; border-radius: 4px; }
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: #ccc !important; cursor: not-allowed; }
+
+        .btn-blue { background-color: var(--primary-blue); color: white; border: none; padding: 12px 20px; font-size: 16px; width: 100%; }
+        .btn-green { background-color: var(--success-green); color: white; border: none; padding: 12px 20px; font-size: 16px; width: 100%; }
+        .btn-grey { background-color: #8fa0a8; color: white; border: none; padding: 12px 20px; font-size: 16px; width: 100%; }
+
+        /* 測驗畫面專用 */
+        .options-container button {
+            display: block; width: 100%; text-align: left; padding: 15px;
+            margin-bottom: 12px; border: 1px solid #ddd; background: white;
+            border-radius: 4px; font-size: 15px; color: #333; transition: all 0.2s;
+        }
+        .options-container button.selected { 
+            background-color: #eef2ff; 
+            border-color: var(--primary-blue); 
+            color: var(--primary-blue); 
+        }
+        
+        .nav-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
+        .nav-grid button { width: 35px; height: 35px; padding: 0; border: 1px solid #ddd; background: white; border-radius: 4px; font-weight: bold; color: #555; }
+        .nav-grid button.answered { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .nav-grid button.current { border: 2px solid var(--primary-blue); background-color: #eef2ff; color: var(--primary-blue); }
+
+        .timer-bar { height: 4px; background: #e0e0e0; width: 100%; position: relative; }
+        .timer-progress { height: 100%; background: var(--danger-red); width: 100%; transition: width 1s linear; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background-color: #f8f9fa; color: var(--text-muted); }
+    </style>
 </head>
 <body>
 
-<div class="app-container">
-
     <div id="login-screen" class="screen active">
-        <h2>📖 馬太福音問答比賽 - 系統登入</h2>
-        <div class="login-box">
-            <p style="text-align: center; color: #7f8c8d; margin-bottom: 25px;">請輸入所屬的小組帳號及密碼以進入測驗系統</p>
-            <div class="form-group">
-                <label for="username">小組帳號 (如: Sapling, Devotion)</label>
+        <div class="login-wrapper">
+            <h2 class="login-title">📖 馬太福音問答比賽 - 系統登入</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 30px;">請輸入所屬的小組帳號及密碼以進入測驗系統</p>
+            
+            <div style="text-align: left;">
+                <label style="font-weight: bold; font-size: 14px; color: #444;">小組帳號 (如: Sapling, Devotion)</label>
                 <input type="text" id="username" placeholder="輸入帳號">
-            </div>
-            <div class="form-group">
-                <label for="password">密碼</label>
+                
+                <label style="font-weight: bold; font-size: 14px; color: #444;">密碼</label>
                 <input type="password" id="password" placeholder="輸入密碼">
             </div>
-            <button class="btn-block" onclick="login()">登入系統</button>
+            
+            <button onclick="login()" class="btn-blue">登入系統</button>
         </div>
     </div>
 
     <div id="cell-home-screen" class="screen">
-        <div class="header-bar">
+        <div class="top-navbar">
             <h2>📖 系統儀表板</h2>
-            <div class="user-info">
-                登入小組：<strong id="display-cell" style="color: #f1c40f; font-size: 16px;"></strong>
-                <a onclick="logout()">登出</a>
-            </div>
+            <div class="nav-right">登入小組：<span id="display-cell"></span> <a onclick="logout()">登出</a></div>
         </div>
-        
-        <div class="dashboard-grid">
+        <div class="container dashboard-grid">
             <div class="card">
-                <h3>👤 參賽者報到</h3>
-                <p style="color: #666; margin-bottom: 20px;">請輸入你的真實姓名。系統將自動驗證你是否已完成測驗，或引導你進入測驗畫面。</p>
-                <div class="form-group">
-                    <input type="text" id="user-real-name" placeholder="請輸入你的真實姓名">
-                </div>
-                <button id="submit-name-btn" class="btn-block btn-success" onclick="submitName()">驗證身分並開始</button>
+                <h3><span style="color: purple;">👤</span> 參賽者報到</h3>
+                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">請輸入你的真實姓名。系統將自動驗證你是否已完成測驗，或引導你進入測驗畫面。</p>
+                <input type="text" id="user-real-name" placeholder="請輸入你的真實姓名">
+                <button id="submit-name-btn" onclick="submitName()" class="btn-green">驗證身分並開始</button>
             </div>
-            
             <div class="card">
-                <h3>🏆 賽事資訊</h3>
-                <p style="color: #666; margin-bottom: 20px;">查看目前系統中的榮譽排行榜，了解大家的分數狀況。</p>
-                <button class="btn-block btn-secondary" onclick="loadLeaderboard(); showScreen('leaderboard-screen')">查看排行榜 (Top 10)</button>
+                <h3><span style="color: #f0ad4e;">🏆</span> 賽事資訊</h3>
+                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">查看目前系統中的榮譽排行榜，了解大家的分數狀況。</p>
+                <button onclick="loadLeaderboard(); showScreen('leaderboard-screen')" class="btn-grey" style="margin-top: 30px;">查看排行榜 (Top 10)</button>
             </div>
         </div>
     </div>
 
-<div id="setup-screen" class="screen">
-        <div class="header-bar">
-            <h2>🚀 準備開始測驗</h2>
-            <div class="user-info">參賽者：<strong id="display-name"></strong> | <a onclick="showScreen('cell-home-screen')">返回</a></div>
+    <div id="setup-screen" class="screen">
+        <div class="top-navbar">
+            <h2>📖 準備測驗</h2>
+            <div class="nav-right"><span id="display-name" style="color:white; font-weight:normal;"></span> | <a onclick="showScreen('cell-home-screen')">返回</a></div>
         </div>
-        <div style="text-align: center; padding: 40px 20px;">
-            <h2 style="font-size: 28px; color: #2980b9;">你好，<span id="welcome-name"></span>！</h2>
-            <p style="font-size: 18px; color: #555; max-width: 600px; margin: 0 auto 30px auto; line-height: 1.6;">
-                本次測驗共有 <strong>10</strong> 題選擇題。<br>
-                請選擇適合你的難度，點擊後將<strong>立即開始計時</strong>！
+        <div class="container" style="text-align: center; max-width: 600px; margin-top: 60px;">
+            <h2 style="color: var(--primary-blue); font-size: 28px; margin-bottom: 20px;">你好，<span id="welcome-name"></span>！</h2>
+            
+            <p style="font-size: 16px; color: #555; margin-bottom: 30px; line-height: 1.6;">
+                本次測驗共有 <strong>15</strong> 題選擇題。<br>
+                請確保網路環境穩定，選擇難度並點擊下方按鈕後計時即會開始。
             </p>
-            
-            <div style="display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: 0 auto;">
-                <button onclick="startQuiz(10, 10, 100, '低難度', this)" class="btn-success" style="padding: 15px; font-size: 18px;">
-                    🟢 低難度 (限時 10 分鐘) <br><span style="font-size: 14px; font-weight: normal;">每題 10 分，滿分 100 分</span>
-                </button>
-                
-                <button onclick="startQuiz(5, 12.5, 125, '中難度', this)" style="background-color: #f39c12; color: white; padding: 15px; font-size: 18px; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                    🟡 中難度 (限時 5 分鐘) <br><span style="font-size: 14px; font-weight: normal;">每題 12.5 分，滿分 125 分</span>
-                </button>
-                
-                <button onclick="startQuiz(2, 15, 150, '高難度', this)" class="btn-danger" style="padding: 15px; font-size: 18px;">
-                    🔴 高難度 (限時 2 分鐘) <br><span style="font-size: 14px; font-weight: normal;">每題 15 分，滿分 150 分</span>
-                </button>
-            </div>
-            
-        </div>
-    </div>
 
-    <div id="personal-score-screen" class="screen">
-        <div class="header-bar">
-            <h2>📊 歷史測驗紀錄</h2>
-            <div class="user-info"><a onclick="showScreen('cell-home-screen')">返回儀表板</a></div>
-        </div>
-        <div style="text-align:center; padding: 20px;">
-            <div style="background: #f8f9fa; border: 1px solid #e9ecef; padding: 40px 20px; border-radius: 12px; margin-bottom: 30px;">
-                <p style="font-size: 20px; margin:0 0 15px 0; color: #555;">🏆 系統紀錄成績</p>
-                <strong id="personal-score-display" style="font-size: 36px; color:#2980b9;"></strong>
-                <p style="color: #7f8c8d; margin-top:20px;" id="personal-status-display"></p>
+            <div style="display: flex; flex-direction: column; gap: 12px; max-width: 380px; margin: 0 auto;">
+                <button onclick="startQuiz(10, 10, 150, '低難度', this)" style="background-color: #5cb85c; color: white; padding: 15px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer;">
+                    🟢 低難度 (限時 10 分鐘) <br><small style="font-weight: normal;">每題 10 分，滿分 150 分</small>
+                </button>
+                
+                <button onclick="startQuiz(5, 12.5, 187.5, '中難度', this)" style="background-color: #f0ad4e; color: white; padding: 15px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer;">
+                    🟡 中難度 (限時 5 分鐘) <br><small style="font-weight: normal;">每題 12.5 分，滿分 187.5 分</small>
+                </button>
+                
+                <button onclick="startQuiz(2, 15, 225, '高難度', this)" style="background-color: #d9534f; color: white; padding: 15px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer;">
+                    🔴 高難度 (限時 2 分鐘) <br><small style="font-weight: normal;">每題 15 分，滿分 225 分</small>
+                </button>
             </div>
-            
-            <div id="review-btn-container"></div>
-            
-            <button class="btn-secondary" onclick="showScreen('cell-home-screen')" style="margin-top:20px; width: 200px;">返回</button>
         </div>
     </div>
 
     <div id="quiz-screen" class="screen">
-        <div class="timer-bar" id="timer-bar-container">
-            <span id="score-info"></span>
-            <span id="timer"></span>
-        </div>
+        <div class="top-navbar">
+            <h2 id="question-number">第 1 題 / 共 15 題</h2>
+            </div>
+        <div class="timer-bar"><div id="timer-progress" class="timer-progress"></div></div>
         
-        <div style="background: white; padding: 30px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
-            <span id="question-number" style="display: inline-block; background: #eef2f5; color:#475569; padding: 5px 12px; border-radius: 20px; font-size: 14px; margin-bottom: 15px; font-weight: bold;"></span>
-            <h2 id="question-text" style="color:#2c3e50; text-align: left; font-size: 22px; line-height: 1.5;"></h2>
-            <div id="options"></div>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button class="btn-secondary" onclick="prevQuestion()" style="width: 150px;">⬅️ 上一題</button>
-            <button class="btn-danger" onclick="endQuiz('✅ 正常交卷')" style="width: 150px;">📥 確認交卷</button>
-            <button onclick="nextQuestion()" style="width: 150px;">下一題 ➡️</button>
-        </div>
-        
-        <div class="nav-section">
-            <p style="margin-top: 0; font-weight: bold; color: #475569; font-size: 14px;">快速跳轉：</p>
-            <div id="nav-grid"></div>
+        <div class="container">
+            <div class="card" style="padding: 40px;">
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <span id="timer" style="font-size: 28px; font-weight: bold; color: var(--danger-red); background-color: #fff8f8; padding: 8px 20px; border-radius: 6px; border: 2px solid var(--danger-red); display: inline-block; letter-spacing: 1px;">
+                        ⏳ 00:00
+                    </span>
+                </div>
+                
+                <p id="question-text" style="font-size: 16px; margin-bottom: 25px; line-height: 1.6; font-weight: bold;"></p>
+                <div class="options-container" id="options"></div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
+                    <span id="score-info" style="color: var(--text-muted); font-size: 13px;"></span>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="prevQuestion()" class="btn-grey" style="width: auto; padding: 8px 16px; font-size: 14px;">上一題</button>
+                        <button onclick="nextQuestion()" class="btn-blue" style="width: auto; padding: 8px 16px; font-size: 14px;">下一題</button>
+                    </div>
+                </div>
+                
+                <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+                <h4 style="text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 14px; font-weight: normal;">題號導覽</h4>
+                <div class="nav-grid" id="nav-grid"></div>
+                
+                <div style="text-align: center; margin-top: 40px;">
+                    <button onclick="endQuiz('✅ 正常交卷')" class="btn-green" style="max-width: 200px;">完成並交卷</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="result-screen" class="screen" style="text-align:center;">
-        <div style="padding: 60px 20px;">
-            <h2 style="font-size: 32px;">🎉 測驗結束！</h2>
-            <div style="padding: 40px; background: #e8f5e9; border: 2px solid #c8e6c9; border-radius: 12px; margin: 30px auto; max-width: 400px;">
-                <h3 id="final-score" style="color: #27ae60; font-size: 36px; margin:0;"></h3>
-            </div>
-            <p style="font-size: 18px; color: #555;">感謝你的參與，成績已安全上傳至資料庫。</p>
-            <button class="btn-success" onclick="showScreen('cell-home-screen')" style="margin-top: 20px; padding: 15px 40px; font-size: 18px;">返回儀表板</button>
+    <div id="result-screen" class="screen">
+        <div class="top-navbar">
+            <h2>🎉 測驗結束</h2>
+            <div class="nav-right"><a onclick="showScreen('cell-home-screen')">返回首頁</a></div>
+        </div>
+        <div class="container" style="text-align: center; max-width: 500px; margin-top: 60px;">
+            <h1 style="color: var(--primary-blue); font-size: 32px;">辛苦了！</h1>
+            <p style="font-size: 16px; color: var(--text-muted); margin-bottom: 20px;">你的成績已經記錄到系統中。</p>
+            <div id="final-score" style="font-size: 40px; font-weight: bold; color: var(--danger-red); margin-bottom: 40px;">得分: 0 / 150</div>
+            <button onclick="loadLeaderboard(); showScreen('leaderboard-screen')" class="btn-blue" style="max-width: 250px;">🏆 查看英雄榜</button>
+        </div>
+    </div>
+
+    <div id="personal-score-screen" class="screen">
+        <div class="top-navbar">
+            <h2>📊 測驗紀錄</h2>
+            <div class="nav-right"><a onclick="showScreen('cell-home-screen')">返回</a></div>
+        </div>
+        <div class="container" style="text-align: center; max-width: 500px; margin-top: 60px;">
+            <h2 style="color: var(--success-green);">你已經完成過本次測驗！</h2>
+            <p style="font-size: 16px; margin: 20px 0;">你的最終成績為：</p>
+            <div id="personal-score-display" style="font-size: 32px; font-weight: bold; color: var(--danger-red); margin: 20px 0;"></div>
+            <p id="personal-status-display" style="color: var(--text-muted); font-size: 14px;"></p>
+            <div id="review-btn-container" style="margin-top: 30px;"></div>
         </div>
     </div>
 
     <div id="leaderboard-screen" class="screen">
-        <div class="header-bar">
-            <h2>🏆 榮譽排行榜 (Top 10)</h2>
-            <div class="user-info"><a onclick="showScreen('cell-home-screen')">返回</a></div>
+        <div class="top-navbar">
+            <h2>🏆 英雄榜 (Top 10)</h2>
+            <div class="nav-right"><a onclick="showScreen('cell-home-screen')">返回首頁</a></div>
         </div>
-        <table>
-            <thead>
-                <tr><th>排名</th><th>姓名</th><th>所屬小組</th><th>分數</th></tr>
-            </thead>
-            <tbody id="leaderboard-tbody"></tbody>
-        </table>
+        <div class="container card">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">排名</th>
+                        <th width="35%">姓名</th>
+                        <th width="25%">小組</th>
+                        <th width="25%">成績</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-tbody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="admin-screen" class="screen">
-        <div class="header-bar" style="background-color: #c0392b;">
-            <h2>⚙️ 系統管理員後台</h2>
-            <div class="user-info"><a onclick="logout()">登出系統</a></div>
+        <div class="top-navbar">
+            <h2>⚙️ 管理員後台</h2>
+            <div class="nav-right"><a onclick="logout()">登出</a></div>
         </div>
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button onclick="loadAdminRecords()">🔄 重新整理資料</button>
-        </div>
-        <div style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid #ddd;">
-            <table>
-                <thead>
-                    <tr><th>日期時間</th><th>所屬小組</th><th>姓名</th><th>難度</th><th>分數</th><th>狀態</th></tr>
-                </thead>
-                <tbody id="admin-table-body"></tbody> 
-            </table>
-        </div>
-        <div style="text-align: right; margin-top: 30px;">
-            <button class="btn-danger" onclick="clearRecords()">⚠️ 清除所有成績紀錄</button>
+        <div class="container card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #444;">所有測驗記錄</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="loadAdminRecords()" class="btn-blue" style="width: auto; padding: 8px 15px;">🔄 重新整理</button>
+                    <button onclick="clearRecords()" style="background-color: var(--danger-red); color: white; border: none; padding: 8px 15px; border-radius: 4px;">🗑️ 清除所有資料</button>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日期時間</th>
+                            <th>小組</th>
+                            <th>姓名</th>
+                            <th>難度</th>
+                            <th>成績</th>
+                            <th>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-</div>
-
 <script>
 // 全域變數
-const QUIZ_DEADLINE = new Date("2026-03-21T12:00:00").getTime(); 
+const QUIZ_DEADLINE = new Date("2026-03-28T12:00:00").getTime(); 
 
 let pointsPerQuestion = 0; 
 let maxScore = 0; 
 let timerInterval; 
 let timeRemaining = 0;
 let endTime = 0; 
+let totalTimeForProgress = 0;
 
 let currentUserName = ""; 
 let currentUserCell = ""; 
@@ -359,47 +330,44 @@ let selectedQuestions = [];
 let currentDocId = ""; 
 let currentRecordData = null;
 
-// 題庫 (馬太福音 32 題)
 const questionBank = [
-    { question: "1. 有一位長大痲瘋的來拜耶穌，說：「主若肯，必能叫我____了。」", options: ["痊癒", "康復", "得赦免", "潔淨"], answer: 3 },
-    { question: "2. 有一個百夫長求耶穌醫治他的僕人，他的僕人犯的是什麼病？", options: ["熱病", "大麻瘋", "癱瘓", "癲癇"], answer: 2 },
-    { question: "3. 耶穌在船上睡著了，門徒因風浪大作而驚慌，耶穌醒後斥責他們是什麼樣的人？", options: ["無知的人", "怯懦的人", "膽怯的人", "小信的人"], answer: 3 },
-    { question: "4. 當耶穌把鬼趕入豬群時，耶穌身處在什麼人的地方呢？", options: ["加大拉人", "法利賽人", "加利利人", "撒馬利亞人"], answer: 0 },
-    { question: "5. 耶穌醫治一個癱子時，先對他說了哪句話，讓文士心裡議論他？", options: ["你的病好了", "起來行走吧", "你的罪赦了", "你的信救了你"], answer: 2 },
-    { question: "6. 耶穌經過稅關，看見一個人坐在那裡，就對他說：「你跟從我來。」這個人是誰？", options: ["馬太", "路加", "腓力", "多馬"], answer: 0 },
-    { question: "7. 當法利賽人責難耶穌與罪人一同吃飯時，耶穌說：「經上說：我喜愛___，不喜愛___。」", options: ["謙卑、驕傲", "憐恤、祭祀", "公義、詭詐", "誠實、虛偽"], answer: 1 },
-    { question: "8. 有一個患了十二年血漏的女人，她心裡想只要摸耶穌的什麼，就必痊癒？", options: ["手掌", "腳", "衣裳", "頭"], answer: 2 },
-    { question: "9. 當耶穌差遣十二使徒，給他們權柄，能趕逐污鬼，並醫治各樣的病症時，名單中排在第一位的是誰？", options: ["雅各", "約翰", "西門彼得", "安得烈"], answer: 2 },
-    { question: "10. 耶穌差遣使徒時，吩咐他們：「你們白白的得來，也要白白的_____。」", options: ["傳揚", "捨去", "給予", "奉獻"], answer: 1 },
-    { question: "11. 耶穌教導門徒要靈巧像_____，馴良像_____。", options: ["鴿子、蛇", "蛇、鴿子", "猴、羊", "狐狸、牛"], answer: 1 },
-    { question: "12. 耶穌說：「那殺身體、不能殺靈魂的，不要怕他們；惟有能把身體和靈魂都滅在_____裡的，正要怕他。」", options: ["陰間", "曠野", "地獄", "深淵"], answer: 2 },
-    { question: "13. 「不背著他的_____跟從我的，也不配作我的門徒。」", options: ["軛", "十字架", "擔子", "憂愁"], answer: 1 },
-    { question: "14. 施洗約翰在監獄裡聽見基督所作的事，就打發門徒去問耶穌什麼？", options: ["天國幾時來到", "如何才能成為真門徒", "那將要來的是你嗎", "誰是天國最大的"], answer: 2 },
-    { question: "15. 耶穌說：「看哪，我的母親，我的弟兄。凡遵行我天父旨意的人，就是我的弟兄姊妹和母親了。」的時候，他是伸手指著什麼人呢？", options: ["百夫長", "撒馬利亞人", "聽道的人", "門徒"], answer: 3 },
-    { question: "16. 當審判的時候，是誰要起來定這世代的罪，因為他從地極而來，要聽所羅門的智慧話呢？", options: ["所多瑪", "尼尼微人", "南方的女王", "門徒"], answer: 2 },
-    { question: "17. 「他代替我們的軟弱，擔當我們的疾病。」這是應驗了哪位先知的話？", options: ["以利亞", "以賽亞", "耶利米", "撒母耳"], answer: 1 },
-    { question: "18. 耶穌說：「我心裡____，你們當負我的軛，學我的樣式。」", options: ["苦悶憂愁", "柔和謙卑", "平安喜樂", "亳不懼怕"], answer: 1 },
-    { question: "19. 耶穌在安息日進了會堂，醫治了一個什麼樣的人，引起法利賽人商議要除滅耶穌？", options: ["瞎眼的", "一隻手枯乾了的", "耳聾的", "長大痲瘋的"], answer: 1 },
-    { question: "20. 耶穌說：「凡說話干犯人子的，還可以赦免；惟獨說話干犯_____的，今世來世總不得赦免。」", options: ["聖父", "聖靈", "先知", "天使"], answer: 1 },
-    { question: "21. 耶穌說，除了先知_____的預兆以外，再沒有預兆給這世代看了。", options: ["以賽亞", "耶利米", "以利亞", "約拿"], answer: 3 },
-    { question: "22. 耶穌父親約瑟的職業是什麼？", options: ["漁夫", "石匠", "牧羊人", "木匠"], answer: 3 },
-    { question: "23. 在撒種的比喻中，那些落在土淺石頭地上的，發苗最快，但因為沒有什麼，日頭一出來就曬焦了？", options: ["肥料", "根", "水分", "蔭蔽"], answer: 1 },
-    { question: "24. 在稗子的比喻中，那撒好種的就是人子，田地就是世界，那麼稗子是誰之子？", options: ["惡者", "閒雜人", "愚昧人", "仇敵"], answer: 0 },
-    { question: "25. 天國好像一粒_____，有人拿去種在田裡，後來長起來比各樣的菜都大，成了樹。", options: ["麥子", "芝麻", "芥菜種", "葵花子"], answer: 2 },
-    { question: "26. 分封的王希律因為在生日宴會上許了願，最後在監裡斬了誰？", options: ["彼得", "雅各", "施洗約翰", "司提反"], answer: 2 },
-    { question: "27. 耶穌憐憫曠野的眾人，用五個餅、兩條魚餵飽了五千人（不計婦女孩子），剩下的零碎裝滿了幾個籃子？", options: ["七個", "十個", "十二個", "三個"], answer: 2 },
-    { question: "28. 耶穌在海面上行走，哪位門徒也要求在水面上走過去找耶穌？", options: ["約翰", "彼得", "雅各", "安得烈"], answer: 1 },
-    { question: "29. 當希律聽到耶穌的名聲時，他對臣僕說耶穌是因誰的原因而能發出異能呢？", options: ["施洗約翰", "以利亞", "摩西", "耶利米"], answer: 0 },
-    { question: "30. 耶穌在海面上行走，請問那是發生在夜里什麼時間呢？", options: ["五更天", "四更天", "三更天", "二更天"], answer: 1 },
-    { question: "31. 在撒種的比喻中，當種子落在好土中結實，「有____倍的，____倍的，____倍的。」", options: ["九十、六十、三十", "八十、四十、二十", "九十、五十、二十", "一百、六十、三十"], answer: 3 },
-    { question: "32. 是誰稱耶穌是憑著鬼王別西卜趕鬼的？", options: ["文士", "祭司", "撒都該人", "法利賽人"], answer: 3 }
+    { question: "法利賽人和文士問耶穌，為什麼他的門徒犯了古人的遺傳，因為他們吃飯的時候不___？", options: ["禱告", "沐浴", "洗手", "獻祭"], answer: 2 },
+    { question: "耶穌引用以賽亞的預言指責法利賽人：「這百姓用嘴唇尊敬我，___卻遠離我。」", options: ["行為", "思想", "肉體", "心"], answer: 3 },
+    { question: "耶穌在靠近加利利的海邊上山坐下的時候，有很多病人耶穌腳前就得醫治，那些病人不包括：", options: ["瘸子", "患大麻瘋的", "瞎子", "啞巴"], answer: 1 },
+    { question: "耶穌在指出從心裡發出來的才會污穢人時，以下哪項沒有被提及？", options: ["姦淫", "偷盜", "褻瀆", "苟合"], answer: 2 },
+    { question: "耶穌沒有在以下的哪個地方預言自己受難呢?", options: ["加利利", "該撒利亞腓立比", "去耶路撒冷的路上", "猶太的境界約但河外"], answer: 2 },
+    { question: "有一個婦人求耶穌醫治她那被鬼附的女兒，請問婦人是什麼人呢?", options: ["迦南人", "撒瑪利亞人", "尼尼微人", "敬畏神的人"], answer: 0 },
+    { question: "耶穌用七個餅和幾條小魚餵飽了四千人（不計婦女孩子）後，剩下的零碎裝滿了幾個筐子？", options: ["五個", "七個", "十個", "十二個"], answer: 1 },
+    { question: "當耶穌提醒門徒要防備法利賽人和撒都該人的「酵」，門徒最初以為耶穌是為什麼對他們說這話?", options: ["因為他們沒有帶餅", "因為他們犯了罪", "因為法利賽人和撒都該來試探耶穌", "因為他們小信"], answer: 0 },
+    { question: "耶穌問門徒：「你們說我是誰？」西門彼得回答說：「你是____，是____的兒子。」", options: ["耶穌、神", "基督、神", "耶穌、永生神", "基督、永生神"], answer: 3 },
+    { question: "文士說以利亞要先來，耶穌卻說以利亞已經來了，耶穌這是指著誰說的?", options: ["耶穌", "施洗約翰", "門徒", "耶利米"], answer: 1 },
+    { question: "當耶穌預言自己必須受害、被殺時，彼得勸阻他。耶穌轉過來斥責彼得說：「____，退我後邊去吧！」", options: ["彼得", "愚昧人", "撒但", "小信的人"], answer: 2 },
+    { question: "耶穌帶著三位門徒上了高山，請問是哪三位?", options: ["彼得、安得烈、雅各", "彼得、雅各、約翰", "彼得、雅各、馬太", "聖經沒有記載"], answer: 1 },
+    { question: "耶穌帶著三位門徒上了高山，變了形像。有哪兩位舊約先知顯現，和耶穌說話？", options: ["摩西和以賽亞", "摩西和以利亞", "大衛和以利亞", "大衛和以賽亞"], answer: 1 },
+    { question: "門徒問耶穌為什麼他們不能趕出那個害癲癇病的鬼，耶穌說是因為他們什麼？", options: ["禱告不夠", "沒有禁食", "信心小", "權柄不足"], answer: 2 },
+    { question: "耶穌回應門徒問為什麼他們不能趕出那個害癲癇病的鬼時，用什麼來比喻信心?", options: ["山", "芥菜種", "無花果種", "麵酵"], answer: 1 },
+    { question: "為了繳納丁稅，耶穌吩咐彼得去海邊釣魚，說先釣上來的魚，口裡會有什麼？", options: ["一個銀幣", "一塊錢", "一塊銀子", "一塊金子"], answer: 1 },
+    { question: "門徒問天國裡誰是最大的，耶穌叫了一個____來，使他站在他們當中。", options: ["嬰孩", "門徒", "小孩子", "窮寡婦"], answer: 2 },
+    { question: "耶穌說，倘若你的手或腳叫你跌倒，你該怎麼辦？", options: ["綁起來", "祈求潔淨", "用火焚燒", "砍下來丟掉"], answer: 3 },
+    { question: "耶穌比喻說，一個人若有一百隻羊，走迷了多少隻就要去尋找迷路的羊？", options: ["一隻", "五十隻", "七十隻", "不必理會，守好剩下的羊"], answer: 0 },
+    { question: "彼得問弟兄得罪他，當饒恕幾次。耶穌回答說是要到幾次？", options: ["七十七次", "七十次", "七十個七次", "無數次"], answer: 2 },
+    { question: "在不饒恕人的惡僕比喻中，主人免了僕人一千萬銀子的債，但這僕人卻不肯放過欠他多少錢的同伴？", options: ["一千兩金子", "一百兩銀子", "十兩銀子", "一兩銀子"], answer: 2 },
+    { question: "法利賽人試探耶穌關於休妻的事，耶穌說除了什麼緣故之外，凡休妻另娶的就是犯姦淫了？", options: ["不順服", "淫亂", "不能生育", "信仰不同"], answer: 1 },
+    { question: "耶穌說：「讓小孩子到我這裡來，不要禁止他們；因為在天國的，正是____的人。」", options: ["聽話", "這樣", "純潔", "軟弱"], answer: 1 },
+    { question: "一個少年人問耶穌該做什麼善事才能得永生。耶穌叫他變賣所有的分給窮人，少年人聽見後有什麼反應？", options: ["立刻去行", "歡喜快樂", "憂憂愁愁地走了", "猶豫不決"], answer: 2 },
+    { question: "財主進天國比什麼穿過針的眼還難？", options: ["駱駝", "獅子", "人", "飛鳥"], answer: 0 },
+    { question: "耶穌說，到復興的時候，跟從他的門徒要坐在哪裡，審判以色列的十二個支派？", options: ["天國", "彩虹上", "十二個寶座上", "雲上"], answer: 2 },
+    { question: "是誰求耶穌在他的國裡讓雅各和約翰坐在耶穌的右邊和左邊呢？", options: ["雅各和約翰", "雅各和約翰的母親", "西庇太", "彼得"], answer: 1 },
+    { question: "耶穌教導門徒：「你們中間誰願為首，就必作你們的____。」", options: ["首領", "拉比", "用人", "僕人"], answer: 3 },
+    { question: "「正如人子來，不是要受人的服事，乃是要服事人，並且要捨命，作多人的____。」", options: ["榜樣", "牧人", "救主", "贖價"], answer: 3 },
+    { question: "耶穌進了耶路撒冷後，眾人都說耶穌是什麼人？", options: ["君王", "人子", "先知", "神的兒子"], answer: 2 },
+    { question: "「經上記著說：『我的殿必稱為___的殿』，你們倒使它成為賊窩了。」", options: ["敬拜", "禱告", "獻祭", "萬國"], answer: 1 },
+    { question: "耶穌餓了，走到一棵樹前，卻除了葉子外什麼都找不到，耶穌後來對那棵樹做了什麼？", options: ["砍掉它", "燒了它", "詛咒它", "什麼也沒有做"], answer: 2 },
+    { question: "耶穌講了一個兇惡園戶的比喻，這比喻是針對誰說的呢?", options: ["祭司長和法利賽人", "祭司和法利賽人", "祭司長和文士", "祭司和文士"], answer: 0 }
 ];
 
-// 工具函數
 function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
 }
 
@@ -412,14 +380,12 @@ function shuffleArray(array) {
     return newArr;
 }
 
-// 登入與身份驗證
 function login() {
     const user = document.getElementById('username').value.trim();
     const pass = document.getElementById('password').value;
     
     if (user === "manager101" && pass === "admin101") {
-        showScreen('admin-screen'); 
-        loadAdminRecords();
+        showScreen('admin-screen'); loadAdminRecords();
     } else if ((user === "Sapling" || user === "Devotion") && pass === "Peter2026") {
         currentUserCell = user; 
         document.getElementById('display-cell').innerText = user;
@@ -431,8 +397,7 @@ function login() {
 }
 
 function logout() {
-    currentUserCell = "";
-    currentUserName = "";
+    currentUserCell = ""; currentUserName = "";
     document.getElementById('username').value = "";
     document.getElementById('password').value = "";
     showScreen('login-screen');
@@ -451,18 +416,15 @@ async function submitName() {
 
         if (!snapshot.empty) {
             currentRecordData = snapshot.docs[0].data();
-            const scoreText = `${currentRecordData.score} (難度: ${currentRecordData.difficulty})`;
-            
-            document.getElementById('personal-score-display').innerText = scoreText;
+            document.getElementById('personal-score-display').innerText = `${currentRecordData.score} (難度: ${currentRecordData.difficulty})`;
             document.getElementById('personal-status-display').innerText = `紀錄狀態: ${currentRecordData.status}`;
             
             let reviewContainer = document.getElementById('review-btn-container');
             if (Date.now() > QUIZ_DEADLINE) {
-                reviewContainer.innerHTML = `<button onclick='reviewPastQuiz()' class='btn-success' style='padding:12px 20px; font-size:16px; width:100%; margin-top:10px;'>📖 查閱我的答題紀錄</button>`;
+                reviewContainer.innerHTML = `<button onclick='reviewPastQuiz()' class='btn-blue' style='padding:12px; font-size:16px;'>📖 查閱我的答題紀錄</button>`;
             } else {
-                reviewContainer.innerHTML = `<p style="color:#666; font-size:15px; margin-top:15px; padding:15px; background:#e8f4f8; border-radius:8px;">⏳ (測驗將於 21號正午 12:00 截止，屆時可在此查閱正確答案)</p>`;
+                reviewContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px; padding:15px; background:#f9f9f9; border-radius:6px; border:1px solid #eee;">⏳ (測驗截止後，屆時可在此查閱正確答案)</p>`;
             }
-
             showScreen('personal-score-screen');
         } else {
             currentUserName = nameInput; 
@@ -471,104 +433,84 @@ async function submitName() {
             showScreen('setup-screen');
         }
     } catch (error) { 
-        alert("連線失敗，請檢查網路連線。"); 
-        console.error(error);
+        alert("連線失敗，請檢查網路。若沒有設定 Firebase，請在原始碼中貼上 Config。"); 
     } finally { 
         btn.innerText = "驗證身分並開始"; btn.disabled = false; 
     }
 }
 
 function reviewPastQuiz() {
-    if (!currentRecordData || !currentRecordData.savedQuestions) {
-        alert("找不到詳細的答題紀錄！");
-        return;
-    }
-
-    let html = `<div class="header-bar"><h2>📖 ${currentRecordData.name} 的答題紀錄</h2><div class="user-info"><a onclick="showScreen('personal-score-screen')">返回</a></div></div>`;
-    html += `<div style="text-align:left; max-height: 70vh; overflow-y: auto; padding: 20px; background: white; border-radius: 8px; border: 1px solid #ddd;">`;
+    if (!currentRecordData || !currentRecordData.savedQuestions) { alert("找不到詳細的答題紀錄！"); return; }
+    
+    let html = `<div class="top-navbar"><h2>📖 ${currentRecordData.name} 的紀錄</h2><div class="nav-right"><a onclick="showScreen('personal-score-screen')">返回</a></div></div>`;
+    html += `<div class="container card" style="max-height: 70vh; overflow-y: auto;">`;
 
     currentRecordData.savedQuestions.forEach((q, index) => {
         const userAnswerIndex = currentRecordData.savedAnswers[index];
         const isCorrect = userAnswerIndex === q.answer;
-        const color = isCorrect ? "green" : "red";
+        const color = isCorrect ? "var(--success-green)" : "var(--danger-red)";
         const icon = isCorrect ? "✅" : "❌";
-        
         const userAnswerText = userAnswerIndex !== null ? q.options[userAnswerIndex] : "未作答";
         const correctAnswerText = q.options[q.answer];
 
-        html += `<div style="margin-bottom: 25px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fdfdfd;">
-            <p style="margin-top:0; font-weight:bold; color: #2c3e50; font-size:18px;">${q.question}</p>
-            <p style="color: ${color}; margin: 10px 0; font-size:16px;">${icon} 你的答案: <strong>${userAnswerText}</strong></p>`;
-
-        if (!isCorrect) {
-            html += `<p style="color: #27ae60; margin: 10px 0; font-size:16px; background: #e8f5e9; padding: 12px; border-radius: 6px;">💡 正確答案: <strong>${correctAnswerText}</strong></p>`;
-        }
+        html += `<div style="margin-bottom: 25px; padding: 20px; border: 1px solid #eee; border-radius: 8px; background: #fafafa;">
+            <p style="margin-top:0; font-weight:bold; font-size:16px;">${q.question}</p>
+            <p style="color: ${color}; margin: 10px 0; font-size:15px;">${icon} 你的答案: <strong>${userAnswerText}</strong></p>`;
+        if (!isCorrect) html += `<p style="color: #27ae60; margin: 10px 0; font-size:15px; background: #e8f5e9; padding: 10px; border-radius: 4px;">💡 正確答案: <strong>${correctAnswerText}</strong></p>`;
         html += `</div>`;
     });
-
-    html += `</div><div style="text-align:center; margin-top:20px;"><button class="btn-secondary" onclick="showScreen('personal-score-screen')" style="width:200px;">返回上一頁</button></div>`;
+    html += `</div>`;
 
     let reviewScreen = document.getElementById('review-answer-screen');
     if (!reviewScreen) {
         reviewScreen = document.createElement('div');
         reviewScreen.id = 'review-answer-screen';
         reviewScreen.className = 'screen';
-        document.querySelector('.app-container').appendChild(reviewScreen);
+        document.body.appendChild(reviewScreen);
     }
-    
     reviewScreen.innerHTML = html;
     showScreen('review-answer-screen');
 }
 
-// 測驗核心功能
 async function startQuiz(minutes, points, max, difficultyName, btnElement) {
     if (Date.now() > QUIZ_DEADLINE) {
-        alert("⏳ 測驗已經於 21號 正午 12:00 截止，無法再開始測驗！");
-        return;
+        alert("⏳ 測驗已經截止，無法再開始測驗！"); return;
     }
-
     const originalText = btnElement.innerText;
     btnElement.innerText = "建立試卷中..."; btnElement.disabled = true;
     
     pointsPerQuestion = points; 
     maxScore = max; 
     selectedDifficultyName = difficultyName;
-    userAnswers = new Array(10).fill(null); 
+    userAnswers = new Array(15).fill(null); 
     currentQuestionIndex = 0;
     
     const now = new Date();
     const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    const normalizedName = currentUserName.toLowerCase();
 
     try {
         const docRef = await db.collection("quizRecords").add({
-            date: formattedDate,
-            cell: currentUserCell,
-            name: currentUserName,
-            normalizedName: normalizedName,
-            difficulty: selectedDifficultyName,
-            score: `0 / ${maxScore}`,
-            numericScore: 0, 
+            date: formattedDate, cell: currentUserCell, name: currentUserName,
+            normalizedName: currentUserName.toLowerCase(), difficulty: selectedDifficultyName,
+            score: `0 / ${maxScore}`, numericScore: 0, 
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             status: "⚠️ 意外退出/中途關閉"
         });
         currentDocId = docRef.id; 
     } catch (error) {
-        alert("資料庫連線失敗。");
-        btnElement.innerText = originalText; btnElement.disabled = false;
-        return;
+        alert("資料庫連線失敗。"); btnElement.innerText = originalText; btnElement.disabled = false; return;
     }
     
     btnElement.innerText = originalText; btnElement.disabled = false;
     isQuizActive = true; 
-    
     showScreen('quiz-screen');
     document.getElementById('score-info').innerText = `每題 ${pointsPerQuestion} 分`;
     
-    selectedQuestions = shuffleArray(questionBank).slice(0, 10);
+    selectedQuestions = shuffleArray(questionBank).slice(0, 15);
     buildNavGrid(); 
     
-    endTime = Date.now() + (minutes * 60 * 1000); 
+    totalTimeForProgress = minutes * 60;
+    endTime = Date.now() + (totalTimeForProgress * 1000); 
     timerInterval = setInterval(countdown, 1000);
     countdown(); 
     loadQuestion();
@@ -576,34 +518,23 @@ async function startQuiz(minutes, points, max, difficultyName, btnElement) {
 
 function countdown() {
     timeRemaining = Math.floor((endTime - Date.now()) / 1000);
-    
     if (timeRemaining <= 0) {
-        timeRemaining = 0;
-        updateTimerDisplay();
-        endQuiz("⏰ 時間到自動交卷"); 
-    } else {
-        updateTimerDisplay();
-    }
+        timeRemaining = 0; updateTimerDisplay(); endQuiz("⏰ 時間到自動交卷"); 
+    } else { updateTimerDisplay(); }
 }
 
 function updateTimerDisplay() {
     const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
     const s = (timeRemaining % 60).toString().padStart(2, '0');
-    const timerElement = document.getElementById('timer');
-    const timerBar = document.getElementById('timer-bar-container');
+    document.getElementById('timer').innerText = `⏳ ${m}:${s}`;
     
-    timerElement.innerText = `⏳ 剩餘時間: ${m}:${s}`;
-    
-    if (timeRemaining <= 60) {
-        timerBar.classList.add('danger');
-    } else {
-        timerBar.classList.remove('danger');
-    }
+    const progressPercent = (timeRemaining / totalTimeForProgress) * 100;
+    document.getElementById('timer-progress').style.width = `${progressPercent}%`;
 }
 
 function loadQuestion() {
     const q = selectedQuestions[currentQuestionIndex];
-    document.getElementById('question-number').innerText = `第 ${currentQuestionIndex + 1} 題 / 共 10 題`;
+    document.getElementById('question-number').innerText = `第 ${currentQuestionIndex + 1} 題 / 共 15 題`;
     document.getElementById('question-text').innerText = q.question;
     
     const optionsDiv = document.getElementById('options');
@@ -613,46 +544,22 @@ function loadQuestion() {
         const btn = document.createElement('button');
         btn.innerText = opt;
         btn.onclick = () => selectOption(index);
-        if (userAnswers[currentQuestionIndex] === index) {
-            btn.classList.add('selected');
-        }
+        if (userAnswers[currentQuestionIndex] === index) { btn.classList.add('selected'); }
         optionsDiv.appendChild(btn);
     });
-    
     updateNavGrid();
 }
 
-function selectOption(index) {
-    userAnswers[currentQuestionIndex] = index;
-    loadQuestion(); 
-}
-
-function nextQuestion() {
-    if (currentQuestionIndex < selectedQuestions.length - 1) {
-        currentQuestionIndex++;
-        loadQuestion();
-    }
-}
-
-function prevQuestion() {
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
-        loadQuestion();
-    }
-}
-
-function jumpToQuestion(index) {
-    currentQuestionIndex = index;
-    loadQuestion();
-}
+function selectOption(index) { userAnswers[currentQuestionIndex] = index; loadQuestion(); }
+function nextQuestion() { if (currentQuestionIndex < 14) { currentQuestionIndex++; loadQuestion(); } }
+function prevQuestion() { if (currentQuestionIndex > 0) { currentQuestionIndex--; loadQuestion(); } }
+function jumpToQuestion(index) { currentQuestionIndex = index; loadQuestion(); }
 
 function buildNavGrid() {
-    const grid = document.getElementById('nav-grid');
-    grid.innerHTML = '';
-    for (let i = 0; i < 10; i++) {
+    const grid = document.getElementById('nav-grid'); grid.innerHTML = '';
+    for (let i = 0; i < 15; i++) {
         const btn = document.createElement('button');
-        btn.innerText = i + 1;
-        btn.onclick = () => jumpToQuestion(i);
+        btn.innerText = i + 1; btn.onclick = () => jumpToQuestion(i);
         grid.appendChild(btn);
     }
 }
@@ -660,142 +567,82 @@ function buildNavGrid() {
 function updateNavGrid() {
     const grid = document.getElementById('nav-grid');
     const buttons = grid.getElementsByTagName('button');
-    for (let i = 0; i < 10; i++) {
-        buttons[i].className = '';
-        if (i === currentQuestionIndex) {
-            buttons[i].classList.add('current');
-        } else if (userAnswers[i] !== null) {
-            buttons[i].classList.add('answered');
+    for (let i = 0; i < 15; i++) {
+        if(buttons[i]) {
+            buttons[i].className = '';
+            if (i === currentQuestionIndex) { buttons[i].classList.add('current'); }
+            else if (userAnswers[i] !== null) { buttons[i].classList.add('answered'); }
         }
     }
 }
 
-// 交卷與成績計算
 async function endQuiz(statusMessage = "✅ 正常交卷") {
     if (!isQuizActive) return; 
-    
     if (statusMessage === "✅ 正常交卷") {
         const unansweredCount = userAnswers.filter(a => a === null).length;
-        if (unansweredCount > 0) {
-            const confirmSubmit = confirm(`你還有 ${unansweredCount} 題未作答，確定要交卷嗎？`);
-            if (!confirmSubmit) return;
-        }
+        if (unansweredCount > 0 && !confirm(`你還有 ${unansweredCount} 題未作答，確定要交卷嗎？`)) return;
     }
     
-    isQuizActive = false; 
-    clearInterval(timerInterval);
+    isQuizActive = false; clearInterval(timerInterval);
     
     let score = 0;
-    userAnswers.forEach((answer, index) => {
-        if (answer === selectedQuestions[index].answer) {
-            score += pointsPerQuestion;
-        }
+    userAnswers.forEach((answer, index) => { 
+        if (answer === selectedQuestions[index].answer) score += pointsPerQuestion; 
     });
-
-    // 防止浮點數計算誤差或分數異常
-    if (score > maxScore) {
-        score = maxScore;
-    }
 
     try {
         await db.collection("quizRecords").doc(currentDocId).update({
-            score: `${score} / ${maxScore}`,
-            numericScore: score,
-            status: statusMessage,
-            savedQuestions: selectedQuestions,
-            savedAnswers: userAnswers,
-            completionTime: Date.now() 
+            score: `${score} / ${maxScore}`, numericScore: score, status: statusMessage,
+            savedQuestions: selectedQuestions, savedAnswers: userAnswers, completionTime: Date.now() 
         });
-    } catch (error) {
-        console.error("更新成績失敗", error);
-    }
+    } catch (error) { console.error("更新成績失敗", error); }
     
     document.getElementById('final-score').innerText = `得分: ${score} / ${maxScore}`;
     showScreen('result-screen');
 }
 
-window.addEventListener('beforeunload', function (e) {
-    if (isQuizActive) {
-        e.preventDefault();
-        e.returnValue = ''; 
-    }
-});
+window.addEventListener('beforeunload', function (e) { if (isQuizActive) { e.preventDefault(); e.returnValue = ''; } });
 
-// 排行榜與管理員
 function loadLeaderboard() {
     const tbody = document.getElementById('leaderboard-tbody');
-    if (!tbody) return; 
-
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">載入中...</td></tr>';
 
     db.collection("quizRecords").get().then((querySnapshot) => {
         let records = [];
-        querySnapshot.forEach((doc) => {
-            records.push(doc.data());
-        });
-
-        records.sort((a, b) => {
-            if (b.numericScore !== a.numericScore) return b.numericScore - a.numericScore; 
-            const timeA = a.completionTime || Infinity;
-            const timeB = b.completionTime || Infinity;
-            return timeA - timeB; 
-        });
-
-        const top10 = records.slice(0, 10);
-        tbody.innerHTML = '';
-        
-        if (top10.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">暫無測驗記錄</td></tr>';
-            return;
-        }
-
-        top10.forEach((data, index) => {
-            const tr = document.createElement('tr');
-            let rankDisplay = index + 1;
-            if (index === 0) rankDisplay = '🥇';
-            else if (index === 1) rankDisplay = '🥈';
-            else if (index === 2) rankDisplay = '🥉';
-
-            tr.innerHTML = `
-                <td style="text-align:center; font-size:20px;">${rankDisplay}</td>
-                <td style="font-weight: bold;">${data.name}</td>
-                <td>${data.cell || '-'}</td>
-                <td style="text-align:center; font-weight:bold; color: #e74c3c; font-size: 18px;">${data.score}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }).catch(error => { console.error("載入排行榜失敗", error); });
-}
-
-function loadAdminRecords() {
-    const tbody = document.getElementById('admin-table-body');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">載入中...</td></tr>';
-    
-    db.collection("quizRecords").get().then((querySnapshot) => {
-        let records = [];
-        querySnapshot.forEach((doc) => { records.push(doc.data()); });
-
+        querySnapshot.forEach((doc) => records.push(doc.data()));
         records.sort((a, b) => {
             if (b.numericScore !== a.numericScore) return b.numericScore - a.numericScore; 
             return (a.completionTime || Infinity) - (b.completionTime || Infinity); 
         });
 
-        tbody.innerHTML = '';
-        if (records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">無記錄</td></tr>';
-            return;
-        }
+        const top10 = records.slice(0, 10);
+        tbody.innerHTML = top10.length === 0 ? '<tr><td colspan="4" style="text-align:center;">暫無測驗記錄</td></tr>' : '';
         
+        top10.forEach((data, index) => {
+            const tr = document.createElement('tr');
+            let rankDisplay = index + 1;
+            if (index === 0) rankDisplay = '🥇'; else if (index === 1) rankDisplay = '🥈'; else if (index === 2) rankDisplay = '🥉';
+            tr.innerHTML = `<td style="font-size:18px;">${rankDisplay}</td><td style="font-weight: bold;">${data.name}</td><td>${data.cell || '-'}</td><td style="font-weight:bold; color: var(--danger-red); font-size: 16px;">${data.score}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
+}
+
+function loadAdminRecords() {
+    const tbody = document.getElementById('admin-table-body');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">載入中...</td></tr>';
+    db.collection("quizRecords").get().then((querySnapshot) => {
+        let records = [];
+        querySnapshot.forEach((doc) => records.push(doc.data()));
+        records.sort((a, b) => {
+            if (b.numericScore !== a.numericScore) return b.numericScore - a.numericScore; 
+            return (a.completionTime || Infinity) - (b.completionTime || Infinity); 
+        });
+
+        tbody.innerHTML = records.length === 0 ? '<tr><td colspan="6" style="text-align:center;">無記錄</td></tr>' : '';
         records.forEach((data) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${data.date || 'N/A'}</td>
-                <td>${data.cell || 'N/A'}</td>
-                <td>${data.name || 'N/A'}</td>
-                <td>${data.difficulty || 'N/A'}</td>
-                <td style="font-weight:bold; color: #2980b9;">${data.score || '0'}</td>
-                <td>${data.status || 'N/A'}</td>
-            `;
+            tr.innerHTML = `<td>${data.date || 'N/A'}</td><td>${data.cell || 'N/A'}</td><td>${data.name || 'N/A'}</td><td>${data.difficulty || 'N/A'}</td><td style="font-weight:bold;">${data.score || '0'}</td><td>${data.status || 'N/A'}</td>`;
             tbody.appendChild(tr);
         });
     });
@@ -803,20 +650,14 @@ function loadAdminRecords() {
 
 function clearRecords() {
     if(confirm("⚠️ 警告：確定清除所有測驗記錄？此操作無法復原！")) {
-        const tbody = document.getElementById('admin-table-body');
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">資料清除中...</td></tr>';
-        
+        document.getElementById('admin-table-body').innerHTML = '<tr><td colspan="6" style="text-align:center;">清除中...</td></tr>';
         db.collection("quizRecords").get().then((querySnapshot) => {
             const batch = db.batch();
-            querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
+            querySnapshot.forEach((doc) => batch.delete(doc.ref));
             return batch.commit();
-        }).then(() => { 
-            alert("✅ 已成功清除所有雲端成績！"); 
-            loadAdminRecords(); 
-        });
+        }).then(() => { alert("✅ 已成功清除！"); loadAdminRecords(); });
     }
 }
 </script>
-
 </body>
 </html>
