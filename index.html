@@ -301,11 +301,26 @@
                             <th>難度</th>
                             <th>成績</th>
                             <th>狀態</th>
-                        </tr>
+                            <th>操作</th> </tr>
                     </thead>
                     <tbody id="admin-table-body"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <div id="admin-detail-screen" class="screen">
+        <div class="top-navbar">
+            <h2>📋 答卷詳情</h2>
+            <div class="nav-right"><a onclick="showScreen('admin-screen')">返回管理員後台</a></div>
+        </div>
+        <div class="container card">
+            <h3 id="detail-student-info" style="color: var(--primary-blue); margin-top: 0;"></h3>
+            <p id="detail-score-info" style="font-weight: bold; color: var(--danger-red);"></p>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <div id="detail-answers-container" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+                </div>
         </div>
     </div>
 
@@ -329,6 +344,7 @@ let isQuizActive = false;
 let selectedQuestions = [];
 let currentDocId = ""; 
 let currentRecordData = null;
+let globalAdminRecords = {}; // 用來暫存管理員載入的詳細記錄
 
 const questionBank = [
     { question: "法利賽人和文士問耶穌，為什麼他的門徒犯了古人的遺傳，因為他們吃飯的時候不___？", options: ["禱告", "沐浴", "洗手", "獻祭"], answer: 2 },
@@ -630,22 +646,93 @@ function loadLeaderboard() {
 
 function loadAdminRecords() {
     const tbody = document.getElementById('admin-table-body');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">載入中...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">載入中...</td></tr>';
     db.collection("quizRecords").get().then((querySnapshot) => {
         let records = [];
-        querySnapshot.forEach((doc) => records.push(doc.data()));
+        globalAdminRecords = {}; // 清空暫存
+        
+        querySnapshot.forEach((doc) => {
+            let data = doc.data();
+            data.id = doc.id; // 記錄低 Firestore 的文檔 ID
+            records.push(data);
+            globalAdminRecords[doc.id] = data; // 存入字典方便之後查閱
+        });
+        
         records.sort((a, b) => {
             if (b.numericScore !== a.numericScore) return b.numericScore - a.numericScore; 
             return (a.completionTime || Infinity) - (b.completionTime || Infinity); 
         });
 
-        tbody.innerHTML = records.length === 0 ? '<tr><td colspan="6" style="text-align:center;">無記錄</td></tr>' : '';
+        tbody.innerHTML = records.length === 0 ? '<tr><td colspan="7" style="text-align:center;">無記錄</td></tr>' : '';
         records.forEach((data) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${data.date || 'N/A'}</td><td>${data.cell || 'N/A'}</td><td>${data.name || 'N/A'}</td><td>${data.difficulty || 'N/A'}</td><td style="font-weight:bold;">${data.score || '0'}</td><td>${data.status || 'N/A'}</td>`;
+            tr.innerHTML = `
+                <td>${data.date || 'N/A'}</td>
+                <td>${data.cell || 'N/A'}</td>
+                <td>${data.name || 'N/A'}</td>
+                <td>${data.difficulty || 'N/A'}</td>
+                <td style="font-weight:bold;">${data.score || '0'}</td>
+                <td>${data.status || 'N/A'}</td>
+                <td style="white-space: nowrap;">
+                    <button onclick="viewUserAnswers('${data.id}')" class="btn-blue" style="padding: 6px 10px; font-size: 13px; width: auto; margin-right: 5px;">👀 睇卷</button>
+                    <button onclick="deleteSingleRecord('${data.id}')" class="btn-grey" style="background-color: var(--danger-red); padding: 6px 10px; font-size: 13px; width: auto;">🗑️</button>
+                </td>
+            `;
             tbody.appendChild(tr);
         });
     });
+}
+
+// 新增功能 1：刪除單一記錄
+function deleteSingleRecord(docId) {
+    if (confirm("⚠️ 確定要刪除這筆參賽記錄嗎？此操作無法復原。")) {
+        db.collection("quizRecords").doc(docId).delete().then(() => {
+            alert("✅ 記錄已成功刪除！");
+            loadAdminRecords(); // 重新載入表格
+        }).catch((error) => {
+            alert("❌ 刪除失敗：" + error);
+        });
+    }
+}
+
+// 新增功能 2：查看單一參賽者的答卷
+function viewUserAnswers(docId) {
+    const record = globalAdminRecords[docId];
+    if (!record) { alert("找不到資料！"); return; }
+    
+    document.getElementById('detail-student-info').innerText = `👤 姓名：${record.name} (小組: ${record.cell || '無'})`;
+    document.getElementById('detail-score-info').innerText = `🏆 分數：${record.score} | 難度：${record.difficulty || '未知'} | 狀態：${record.status}`;
+    
+    const container = document.getElementById('detail-answers-container');
+    container.innerHTML = '';
+
+    // 檢查有沒有詳細答題資料 (有些中途退出的可能沒有)
+    if (!record.savedQuestions || !record.savedAnswers) {
+        container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding: 20px;">⚠️ 這筆記錄沒有儲存詳細的答題資料 (可能是中途退出或舊版記錄)。</p>';
+    } else {
+        let html = '';
+        record.savedQuestions.forEach((q, index) => {
+            const userAnswerIndex = record.savedAnswers[index];
+            const isCorrect = userAnswerIndex === q.answer;
+            const color = isCorrect ? "var(--success-green)" : "var(--danger-red)";
+            const icon = isCorrect ? "✅" : "❌";
+            const userAnswerText = userAnswerIndex !== null ? q.options[userAnswerIndex] : "未作答";
+            const correctAnswerText = q.options[q.answer];
+
+            html += `<div style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 8px; background: #fafafa;">
+                <p style="margin-top:0; font-weight:bold; font-size:15px; color:#333;">${index + 1}. ${q.question.replace(/^\d+\.\s*/, '')}</p>
+                <p style="color: ${color}; margin: 8px 0; font-size:14px;">${icon} 參賽者答案: <strong>${userAnswerText}</strong></p>`;
+            
+            // 如果答錯或未作答，顯示正確答案
+            if (!isCorrect) {
+                html += `<p style="color: #27ae60; margin: 8px 0; font-size:14px; background: #e8f5e9; padding: 8px; border-radius: 4px;">💡 正確答案: <strong>${correctAnswerText}</strong></p>`;
+            }
+            html += `</div>`;
+        });
+        container.innerHTML = html;
+    }
+    
+    showScreen('admin-detail-screen');
 }
 
 function clearRecords() {
